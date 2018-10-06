@@ -33,8 +33,6 @@ jobs:
           command: |
             pip3 install pipenv --user
             python3 -m pipenv install
-            python3 -m pipenv shell
-            flask run
 
       - save_cache:
           paths:
