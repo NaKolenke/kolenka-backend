@@ -46,7 +46,7 @@ jobs:
       - run:
           name: Deploy Over SSH
           command: |
-            ssh $SSH_USER@$SSH_HOST "echo \"deploy\""
+            ssh $SSH_USER@$SSH_HOST "./deploy.sh $CIRCLE_BRANCH"
 
 workflows:
   version: 2
