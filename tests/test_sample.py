@@ -25,4 +25,4 @@ def test_sample(client):
     """Start with a blank database."""
 
     rv = client.get('/')
-    assert b'Hello World!' in rv.data
+    assert b'Testing update' in rv.data

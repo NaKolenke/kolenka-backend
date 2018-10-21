@@ -9,4 +9,4 @@ if ('KOLENKA_BACKEND_CONFIG' in os.environ):
 
 @app.route("/")
 def hello():
-    return "Hello World!"
+    return "Testing update"
