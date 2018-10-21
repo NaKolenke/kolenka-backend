@@ -3,9 +3,20 @@ from peewee import *
 db = None
 
 def init_database():
-    db = SqliteDatabase('database.db')
+    global db
+    if db is None:
+        db = SqliteDatabase('database.db')
+        db.connect()
+
+def create_tables():
+    global db
+    from src.model.user import User
+    db.create_tables([User])
+
+    User.create(name="Test")
 
 def get_database():
-    if not db:
+    global db
+    if db is None:
         init_database()
     return db
