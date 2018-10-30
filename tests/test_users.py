@@ -13,3 +13,8 @@ def test_users(client, user):
     rv = client.get('/users/')
     assert len(rv.json) == 1, 'We should have only one user'
     assert rv.json[0]['login'] == 'Test', 'With name Test'
+
+def test_users(client):
+    rv = client.get('/users/')
+    assert len(rv.json) == 0, 'We should have no users'
+    assert str(rv.json) == '[]'
