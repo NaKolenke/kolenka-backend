@@ -3,7 +3,6 @@ from flask import Flask
 from src.model import db
 
 def create_app():
-    print("create_app")
     app = Flask(__name__)
 
     app.config.from_object('src.config.default.Config')
