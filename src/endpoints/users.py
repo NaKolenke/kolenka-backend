@@ -1,3 +1,4 @@
+import datetime
 import hashlib
 from flask import current_app, Blueprint, request, jsonify, abort
 from playhouse.shortcuts import model_to_dict, dict_to_model
@@ -15,22 +16,53 @@ def users():
 @bp.route("/register/", methods=['POST'])
 def register():
     json = request.get_json()
-    
-    if not ('username' in json and 'password' in json):
-        return make_error('Username or password not in request', 400)
 
-    return make_error('Can\'t authorize', 401)
+    errors = []
+
+    if 'username' not in json:
+        errors.append('"Username" not in request')
+    if 'password' not in json:
+        errors.append('"Password" not in request')
+    if 'email' not in json:
+        errors.append('"Email" not in request')
+    if 'name' not in json:
+        errors.append('"Name" not in request')
+
+    if len(errors) > 0:
+        message = ''
+        for e in errors:
+            message = message + e + ', '
+        return make_error(message[0:-2], 400)
+
+    username = json['username']
+    password = json['password']
+    email = json['email']
+    name = json['name']
+
+    user = User.get_or_none(User.login==username)
+    if user is not None:
+        return make_error('User with this username already created', 400)
+    user = User.get_or_none(User.email==email)
+    if user is not None:
+        return make_error('User with this email already created', 400)
+
+    user = User.create(login=username, password=salted(password, current_app.config['PASSWORD_SALT']), email=email, registration_date=datetime.datetime.now(), last_active_date=datetime.datetime.now(), name=name)
+
+    return jsonify({
+            'success': 1,
+            'token': 1
+            })
 
 @bp.route("/login/", methods=['POST'])
 def login():
     json = request.get_json()
-    
+
     if not ('username' in json and 'password' in json):
         return make_error('Username or password not in request', 400)
-    
+
     username = json['username']
     password = json['password']
-    
+
     user = User.get_or_none(User.login==username)
 
     if user is not None and authorize(user, password):

@@ -23,11 +23,47 @@ def test_empty_users(client):
 def test_registration(client):
     rv = client.post('/users/register/', json={
         'username': 'test_user',
-        'password': 'some-pass'
+        'password': 'some-pass',
+        'name': 'name',
+        'email': 'email',
     })
     assert rv.status_code == 200
     assert rv.json['success'] == 1
     assert 'token' in rv.json
+
+def test_registration_not_all_data(client):
+    rv = client.post('/users/register/', json={
+        'username': 'test_user',
+        'password': 'some-pass'
+    })
+    assert rv.status_code == 400
+    assert rv.json['success'] == 0
+    assert 'token' not in rv.json
+    assert rv.json['error'] == '"Email" not in request, "Name" not in request'
+
+def test_registration_username_busy(client, user):
+    rv = client.post('/users/register/', json={
+        'username': 'test_user',
+        'password': 'some-pass',
+        'name': 'name',
+        'email': 'email',
+    })
+    assert rv.status_code == 400
+    assert rv.json['success'] == 0
+    assert 'token' not in rv.json
+    assert rv.json['error'] == 'User with this username already created'
+
+def test_registration_email_busy(client, user):
+    rv = client.post('/users/register/', json={
+        'username': 'test_user2',
+        'password': 'some-pass',
+        'name': 'name',
+        'email': 'asd',
+    })
+    assert rv.status_code == 400
+    assert rv.json['success'] == 0
+    assert 'token' not in rv.json
+    assert rv.json['error'] == 'User with this email already created'
 
 def test_registration_failure(client):
     rv = client.post('/users/register/', json={
