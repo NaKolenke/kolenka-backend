@@ -2,11 +2,9 @@ import os
 
 import pytest
 
-from src.config.test import TestConfig
-
 @pytest.fixture(scope="function")
 def client():
-    os.environ['KOLENKA_CONFIG'] = 'src.config.test.TestConfig'
+    os.environ['KOLENKA_CONFIG'] = 'config/test.cfg'
 
     import src
     app = src.create_app()
@@ -17,4 +15,4 @@ def client():
 
     from src.model import db
     db.db_wrapper.database.close()
-    os.unlink(TestConfig.DATABASE_FOR_REMOVE)
+    os.unlink(app.config['DATABASE_FOR_REMOVE'])
