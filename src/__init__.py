@@ -5,7 +5,7 @@ def create_app():
     app = Flask(__name__)
 
     app.config.from_object('src.config.default.Config')
-    app.config.from_envvar('KOLENKA_CONFIG')
+    app.config.from_envvar('KOLENKA_CONFIG', silent=True)
 
     db.init_database(app)
     db.create_tables()

@@ -112,3 +112,4 @@ dmypy.json
 
 .vscode/
 database.db
+turkey.db

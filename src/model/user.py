@@ -7,10 +7,8 @@ class User(db.db_wrapper.Model):
     email = CharField()
     registration_date = DateTimeField()
     last_active_date = DateTimeField()
-    name = CharField()
+    name = CharField(null=True)
     birthday = DateField(null=True)
     about = TextField(null=True)
     avatar = CharField(null=True)
     role = IntegerField(default=1)
-
-
