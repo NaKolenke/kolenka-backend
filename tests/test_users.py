@@ -2,6 +2,24 @@ import datetime
 import flask
 import pytest
 from src.model.user import User
+from src.model.token import Token
+
+def validate_tokens(json):
+    assert 'access_token' in json
+
+    access_token = Token.select().where(Token.is_refresh_token == False).get()
+    assert json['access_token']['token'] == access_token.token
+    assert json['access_token']['valid_until'] > datetime.datetime.now().timestamp() + 60 * 60 * 24 * 29
+    assert json['access_token']['valid_until'] < datetime.datetime.now().timestamp() + 60 * 60 * 24 * 31
+    assert User.get() == access_token.user
+
+    refresh_token = Token.select().where(Token.is_refresh_token == True).get()
+    assert json['refresh_token']['token'] == refresh_token.token
+    assert json['refresh_token']['valid_until'] > datetime.datetime.now().timestamp() + 60 * 60 * 24 * 89
+    assert json['refresh_token']['valid_until'] < datetime.datetime.now().timestamp() + 60 * 60 * 24 * 91
+    assert User.get() == refresh_token.user
+
+    assert refresh_token.token != access_token.token
 
 @pytest.fixture
 def user():
@@ -27,9 +45,10 @@ def test_registration(client):
         'name': 'name',
         'email': 'email',
     })
+    assert User.select().count() == 1
     assert rv.status_code == 200
     assert rv.json['success'] == 1
-    assert 'token' in rv.json
+    validate_tokens(rv.json)
 
 def test_registration_not_all_data(client):
     rv = client.post('/users/register/', json={
@@ -40,6 +59,8 @@ def test_registration_not_all_data(client):
     assert rv.json['success'] == 0
     assert 'token' not in rv.json
     assert rv.json['error'] == '"Email" not in request, "Name" not in request'
+    assert User.select().count() == 0
+    assert Token.select().count() == 0
 
 def test_registration_username_busy(client, user):
     rv = client.post('/users/register/', json={
@@ -48,10 +69,13 @@ def test_registration_username_busy(client, user):
         'name': 'name',
         'email': 'email',
     })
+
     assert rv.status_code == 400
     assert rv.json['success'] == 0
     assert 'token' not in rv.json
     assert rv.json['error'] == 'User with this username already created'
+    assert User.select().count() == 1
+    assert Token.select().count() == 0
 
 def test_registration_email_busy(client, user):
     rv = client.post('/users/register/', json={
@@ -64,6 +88,8 @@ def test_registration_email_busy(client, user):
     assert rv.json['success'] == 0
     assert 'token' not in rv.json
     assert rv.json['error'] == 'User with this email already created'
+    assert User.select().count() == 1
+    assert Token.select().count() == 0
 
 def test_registration_failure(client):
     rv = client.post('/users/register/', json={
@@ -72,6 +98,8 @@ def test_registration_failure(client):
     assert rv.status_code == 400
     assert rv.json['success'] == 0
     assert 'token' not in rv.json
+    assert User.select().count() == 0
+    assert Token.select().count() == 0
 
 def test_auth(client, user):
     rv = client.post('/users/login/', json={
@@ -80,7 +108,7 @@ def test_auth(client, user):
     })
     assert rv.status_code == 200
     assert rv.json['success'] == 1
-    assert 'token' in rv.json
+    validate_tokens(rv.json)
 
 def test_auth_wrong_password(client, user):
     rv = client.post('/users/login/', json={
@@ -90,6 +118,7 @@ def test_auth_wrong_password(client, user):
     assert rv.status_code == 401
     assert rv.json['success'] == 0
     assert 'token' not in rv.json
+    assert Token.select().count() == 0
 
 def test_auth_wrong_user(client, user):
     rv = client.post('/users/login/', json={
@@ -99,6 +128,7 @@ def test_auth_wrong_user(client, user):
     assert rv.status_code == 401
     assert rv.json['success'] == 0
     assert 'token' not in rv.json
+    assert Token.select().count() == 0
 
 def test_auth_failure(client, user):
     rv = client.post('/users/login/', json={
@@ -107,3 +137,4 @@ def test_auth_failure(client, user):
     assert rv.status_code == 400
     assert rv.json['success'] == 0
     assert 'token' not in rv.json
+    assert Token.select().count() == 0
