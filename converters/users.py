@@ -1,5 +1,5 @@
 import datetime
-from src.model.converters.models import TuUser, TuSession
+from converters.models import TuUser, TuSession
 from src import create_app
 from src.model.user import User
 
@@ -29,6 +29,7 @@ for u in TuUser.select():
         removed = removed + 1
     else:
         User.create(
+            id = u.user,
             login=u.user_login,
             password=u.user_password,
             email=u.user_mail,
