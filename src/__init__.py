@@ -15,6 +15,9 @@ def create_app():
         return "You are at the main page of kolenka api"
 
     from src.endpoints import users
+    from src.endpoints import tokens
+    
     app.register_blueprint(users.bp)
+    app.register_blueprint(tokens.bp)
 
     return app

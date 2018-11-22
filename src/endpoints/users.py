@@ -62,7 +62,7 @@ def register():
                 'token': refresh_token.token,
                 'valid_until': refresh_token.valid_until.timestamp(),
             }
-            })
+        })
 
 @bp.route("/login/", methods=['POST'])
 def login():
@@ -90,7 +90,7 @@ def login():
                 'token': refresh_token.token,
                 'valid_until': refresh_token.valid_until.timestamp(),
             }
-            })
+        })
 
     return make_error('Can\'t authorize', 401)
 

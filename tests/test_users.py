@@ -6,6 +6,7 @@ from src.model.token import Token
 
 def validate_tokens(json):
     assert 'access_token' in json
+    assert 'refresh_token' in json
 
     access_token = Token.select().where(Token.is_refresh_token == False).get()
     assert json['access_token']['token'] == access_token.token
