@@ -2,8 +2,10 @@ import datetime
 import hashlib
 from flask import current_app, Blueprint, request, jsonify, abort
 from playhouse.shortcuts import model_to_dict, dict_to_model
+from src.auth import login_required, get_user_from_request
 from src.model.user import User
 from src.model.token import Token
+
 
 bp = Blueprint('users', __name__, url_prefix='/users/')
 
@@ -13,6 +15,15 @@ def users():
     for u in User.select():
         users.append(model_to_dict(u))
     return jsonify(users)
+
+@bp.route("/self/")
+@login_required
+def current_user():
+    user = get_user_from_request()
+    return jsonify({
+        'success': 1,
+        'user': model_to_dict(user)
+    })
 
 @bp.route("/register/", methods=['POST'])
 def register():

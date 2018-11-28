@@ -94,3 +94,19 @@ def test_refresh_token_outdated(client, tokens):
     assert rv.json['success'] == 0
     assert rv.json['error'] == 'Token is outdated'
     assert 'access_token' not in rv.json
+
+def test_self(client, tokens):
+    headers = {
+        'Authorization': tokens['access_token'].token
+    }
+    rv = client.get('/users/self/', headers=headers)
+    assert rv.status_code == 200
+    assert 'user' in rv.json
+    assert rv.json['user']['login'] == 'test_user'
+
+def test_self_not_authorized(client, tokens):
+    rv = client.get('/users/self/')
+    assert rv.status_code == 401
+    assert rv.json['success'] == 0
+    assert rv.json['error'] == 'You should be authorized to use this endpoint'
+    assert 'user' not in rv.json

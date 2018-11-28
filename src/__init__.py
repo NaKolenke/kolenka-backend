@@ -1,5 +1,7 @@
+import datetime
 from flask import Flask
 from src.model import db
+from src.auth import get_user_from_request
 
 def create_app():
     app = Flask(__name__)
@@ -19,5 +21,12 @@ def create_app():
     
     app.register_blueprint(users.bp)
     app.register_blueprint(tokens.bp)
+
+    @app.before_request
+    def before_request():
+        user = get_user_from_request()
+        if user:
+            user.last_active_date = datetime.datetime.now()
+            user.save()
 
     return app
