@@ -18,9 +18,11 @@ def create_app():
 
     from src.endpoints import users
     from src.endpoints import tokens
+    from src.endpoints import doc
     
     app.register_blueprint(users.bp)
     app.register_blueprint(tokens.bp)
+    app.register_blueprint(doc.bp)
 
     @app.before_request
     def before_request():
