@@ -2,6 +2,7 @@ import datetime
 import hashlib
 from flask import current_app, Blueprint, request, jsonify, abort
 from playhouse.shortcuts import model_to_dict, dict_to_model
+from playhouse.flask_utils import PaginatedQuery
 from src.auth import login_required, get_user_from_request
 from src.model.user import User
 from src.model.token import Token
@@ -12,9 +13,17 @@ bp = Blueprint('users', __name__, url_prefix='/users/')
 @bp.route("/")
 def users():
     users = []
-    for u in User.select():
+    query = User.select()
+    paginated_query = PaginatedQuery(query, paginate_by=20)
+    for u in paginated_query.get_object_list():
         users.append(model_to_dict(u))
-    return jsonify(users)
+    return jsonify({
+        'success': 1,
+        'users': users,
+        'meta': {
+            'page_count': paginated_query.get_page_count()
+        }
+    })
 
 @bp.route("/self/")
 @login_required
