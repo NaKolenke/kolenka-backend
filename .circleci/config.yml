@@ -31,11 +31,10 @@ jobs:
       - run:
           name: run tests
           command: |
-            python3 -m pipenv run pytest
+            python3 -m pipenv run pytest --junitxml=test-results/pytest/results.xml
+      - store_test_results:
+          path: test-results
 
-      # - store_artifacts:
-      #     path: test-reports
-      #     destination: test-reports
   deploy:
     machine:
       enabled: true
@@ -58,4 +57,4 @@ workflows:
             - build
           filters:
             branches:
-              only:  /^release/\d+\.\d+\.\d+/
+              only:  master
