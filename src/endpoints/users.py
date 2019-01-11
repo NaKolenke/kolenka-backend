@@ -16,7 +16,7 @@ def users():
     query = User.select()
     paginated_query = PaginatedQuery(query, paginate_by=20)
     for u in paginated_query.get_object_list():
-        users.append(model_to_dict(u))
+        users.append(model_to_dict(u, exclude=[User.password]))
     return jsonify({
         'success': 1,
         'users': users,
