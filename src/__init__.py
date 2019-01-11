@@ -30,5 +30,10 @@ def create_app():
         if user:
             user.last_active_date = datetime.datetime.now()
             user.save()
+    
+    @app.after_request
+    def after_request(response):
+        response.headers['Content-Type'] = 'application/json; charset=utf-8'
+        return response
 
     return app
