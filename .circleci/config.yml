@@ -4,7 +4,7 @@ jobs:
     docker:
       - image: circleci/python:3.6.6
         environment:
-          PIPENV_CACHE_DIR: ~/repo/pipenv-cache
+          PIPENV_CACHE_DIR: ~/pipenv-cache
 
     working_directory: ~/repo
 
@@ -25,7 +25,7 @@ jobs:
 
       - save_cache:
           paths:
-            - ./pipenv-cache
+            - ~/pipenv-cache
           key: v1-dependencies-{{ checksum "Pipfile" }}
 
       - run:
