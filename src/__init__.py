@@ -19,12 +19,13 @@ def create_app():
     def motd():
         return "You are at the main page of kolenka api"
 
-    from src.endpoints import users, tokens, doc, content
+    from src.endpoints import users, tokens, doc, content, feedback
 
     app.register_blueprint(users.bp)
     app.register_blueprint(tokens.bp)
     app.register_blueprint(doc.bp)
     app.register_blueprint(content.bp)
+    app.register_blueprint(feedback.bp)
 
     @app.before_request
     def before_request():

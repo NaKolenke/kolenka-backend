@@ -36,3 +36,8 @@ class Token(db.db_wrapper.Model):
     @classmethod
     def generate_refresh_token(cls, user):
         return cls.create(user=user, token=secrets.token_hex(), is_refresh_token=True, valid_until=datetime.datetime.now() + datetime.timedelta(days=90))
+
+class Feedback(db.db_wrapper.Model):
+    user = ForeignKeyField(model=User, backref='token')
+    text = TextField()
+    is_resolved = BooleanField(default=False)

@@ -11,8 +11,8 @@ def init_database(app):
 
 def create_tables():
     global db_wrapper
-    from src.model.models import User, Token, Content
-    db_wrapper.database.create_tables([User, Token, Content])
+    from src.model.models import User, Token, Content, Feedback
+    db_wrapper.database.create_tables([User, Token, Content, Feedback])
 
     db_wrapper.database.close()
 

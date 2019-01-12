@@ -74,8 +74,13 @@ def documentation():
 
         Endpoint('POST', '/content/', 'content',
                  'Загрузить файл. В запросе необходимо передать поле file.'),
-        Endpoint('GET', '/content/<id>', 'content',
+        Endpoint('GET', '/content/<id>/', 'content',
                  'Получить файл.'),
+
+        Endpoint('POST', '/feedback/', 'feedback',
+                 'Оставить отзыв. Необходима авторизация.'),
+        Endpoint('GET', '/feedback/', 'feedback',
+                 'Получить список отзывов. Доступно только пользователям с ролью администратор.'),
 
     ]
 
