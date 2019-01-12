@@ -3,3 +3,4 @@ class Config(object):
     DATABASE = 'sqlite:///database.db'
     PASSWORD_SALT = 'some-salt'
     JSON_AS_ASCII = False
+    UPLOAD_FOLDER = 'uploads/'

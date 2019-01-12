@@ -1,7 +1,7 @@
 import functools
 import datetime
 from flask import request, jsonify
-from src.model.token import Token
+from src.model.models import Token
 
 def login_required(f):
     @functools.wraps(f)
@@ -15,7 +15,7 @@ def login_required(f):
             if actual_token:
                 if actual_token.valid_until > datetime.datetime.now():
                     is_valid = True
-            
+
             if not is_valid:
                 return make_error(msg, 401)
 

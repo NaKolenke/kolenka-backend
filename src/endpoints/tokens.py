@@ -2,8 +2,8 @@ import datetime
 import hashlib
 from flask import current_app, Blueprint, request, jsonify, abort
 from playhouse.shortcuts import model_to_dict, dict_to_model
-from src.model.user import User
-from src.model.token import Token
+from src.model.models import User, Token
+from src.utils import make_error
 
 bp = Blueprint('tokens', __name__, url_prefix='/token/')
 
@@ -23,12 +23,12 @@ def valid():
         return make_error(message[0:-2], 400)
 
     token = json['token']
-    
+
     actual_token = Token.get_or_none((Token.token==token) & (Token.is_refresh_token==False))
-    
+
     if actual_token is None:
         return make_error('Token is invalid', 400)
-    
+
     if actual_token.valid_until < datetime.datetime.now():
         return make_error('Token is outdated', 400)
 
@@ -52,12 +52,12 @@ def refresh():
         return make_error(message[0:-2], 400)
 
     token = json['token']
-    
+
     actual_token = Token.get_or_none((Token.token==token) & (Token.is_refresh_token==True))
-    
+
     if actual_token is None:
         return make_error('Token is invalid', 400)
-    
+
     if actual_token.valid_until < datetime.datetime.now():
         return make_error('Token is outdated', 400)
 
@@ -77,11 +77,3 @@ def refresh():
                 'valid_until': refresh_token.valid_until.timestamp(),
             }
         })
-
-def make_error(message, code):
-    response = jsonify({
-        'success': 0,
-        'error': message
-    })
-    response.status_code = code
-    return response

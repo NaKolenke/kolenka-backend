@@ -1,8 +1,7 @@
 import datetime
 import flask
 import pytest
-from src.model.user import User
-from src.model.token import Token
+from src.model.models import User, Token, Content
 
 def validate_tokens(json):
     assert 'access_token' in json
@@ -24,7 +23,7 @@ def validate_tokens(json):
 
 @pytest.fixture
 def user():
-    user = User.create(login="test_user", password="0x:993fadc17393cdfb06dfb7f5dd0d13de", email="asd", registration_date=datetime.datetime.now(), last_active_date=datetime.datetime.now(), name="name", birthday=datetime.date.today(), about="", avatar="")
+    user = User.create(login="test_user", password="0x:993fadc17393cdfb06dfb7f5dd0d13de", email="asd", registration_date=datetime.datetime.now(), last_active_date=datetime.datetime.now(), name="name", birthday=datetime.date.today(), about="", avatar=None)
 
     from src.model import db
     db.db_wrapper.database.close()
@@ -32,9 +31,28 @@ def user():
     return user
 
 @pytest.fixture
+def avatar():
+    avatar = Content.create(user=1, path='/some/path')
+
+    from src.model import db
+    db.db_wrapper.database.close()
+
+    return avatar
+
+@pytest.fixture
+def user_token():
+    user = User.create(login="test_user1", password="0x:993fadc17393cdfb06dfb7f5dd0d13de", email="asd", registration_date=datetime.datetime.now(), last_active_date=datetime.datetime.now(), name="name", birthday=datetime.date.today(), about="", avatar=None)
+    token = Token.generate_access_token(user)
+
+    from src.model import db
+    db.db_wrapper.database.close()
+
+    return [user, token]
+
+@pytest.fixture
 def users():
     for i in range(30):
-        User.create(login="test_user" + str(i), password="0x:993fadc17393cdfb06dfb7f5dd0d13de", email="asd" + str(i), registration_date=datetime.datetime.now(), last_active_date=datetime.datetime.now(), name="name", birthday=datetime.date.today(), about="", avatar="")
+        User.create(login="test_user" + str(i), password="0x:993fadc17393cdfb06dfb7f5dd0d13de", email="asd" + str(i), registration_date=datetime.datetime.now(), last_active_date=datetime.datetime.now(), name="name", birthday=datetime.date.today(), about="", avatar=None)
 
     from src.model import db
     db.db_wrapper.database.close()
@@ -74,6 +92,41 @@ def test_wrong_user(client, user):
     assert rv.json['success'] == 0
     assert 'user' not in rv.json
     assert rv.json['error'] == 'There is no user with this id', 'Wrong error message'
+
+def test_user_edit_no_auth(client, user_token):
+    rv = client.post('/users/self/', json={
+        'name': 'other name'
+    })
+    assert rv.json['success'] == 0
+    assert rv.json['error'] == 'You should be authorized to use this endpoint', 'Error message is wrong'
+
+def test_user_edit(client, user_token):
+    rv = client.post('/users/self/', json={
+        'name': 'other name'
+    }, headers={
+        'Authorization': user_token[1].token
+    })
+    assert rv.json['success'] == 1
+    assert rv.json['user']['name'] == 'other name', 'Name not changed'
+    assert rv.json['user']['about'] == ''
+
+    rv = client.post('/users/self/', json={
+        'about': 'about text'
+    }, headers={
+        'Authorization': user_token[1].token
+    })
+    assert rv.json['success'] == 1
+    assert rv.json['user']['name'] == 'other name', 'Name was changed'
+    assert rv.json['user']['about'] == 'about text', 'About not changed'
+
+def test_user_edit_avatar(client, user_token, avatar):
+    rv = client.post('/users/self/', json={
+        'avatar': avatar.id
+    }, headers={
+        'Authorization': user_token[1].token
+    })
+    assert rv.json['success'] == 1
+    assert rv.json['user']['avatar']['id'] == avatar.id, 'Avatar not changed'
 
 def test_registration(client):
     rv = client.post('/users/register/', json={

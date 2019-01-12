@@ -1,8 +1,7 @@
 import datetime
 import flask
 import pytest
-from src.model.user import User
-from src.model.token import Token
+from src.model.models import User, Token
 
 def validate_tokens(json):
     assert 'access_token' in json
@@ -22,7 +21,7 @@ def validate_tokens(json):
 
 @pytest.fixture
 def tokens():
-    user = User.create(login="test_user", password="0x:993fadc17393cdfb06dfb7f5dd0d13de", email="asd", registration_date=datetime.datetime.now(), last_active_date=datetime.datetime.now(), name="name", birthday=datetime.date.today(), about="", avatar="")
+    user = User.create(login="test_user", password="0x:993fadc17393cdfb06dfb7f5dd0d13de", email="asd", registration_date=datetime.datetime.now(), last_active_date=datetime.datetime.now(), name="name", birthday=datetime.date.today(), about="", avatar=None)
 
     a = Token.generate_access_token(user)
     r = Token.generate_refresh_token(user)

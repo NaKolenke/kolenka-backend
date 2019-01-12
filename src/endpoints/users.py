@@ -4,8 +4,8 @@ from flask import current_app, Blueprint, request, jsonify, abort
 from playhouse.shortcuts import model_to_dict, dict_to_model
 from playhouse.flask_utils import PaginatedQuery
 from src.auth import login_required, get_user_from_request
-from src.model.user import User
-from src.model.token import Token
+from src.model.models import User, Token, Content
+from src.utils import make_error
 
 
 bp = Blueprint('users', __name__, url_prefix='/users/')
@@ -36,13 +36,29 @@ def user(id):
         'user': model_to_dict(user, exclude=[User.password]),
     })
 
-@bp.route("/self/")
+@bp.route("/self/", methods=['GET', 'POST'])
 @login_required
 def current_user():
     user = get_user_from_request()
+
+    if request.method == 'POST':
+        json = request.get_json()
+
+        user.password = json.get('password', user.password)
+        user.email = json.get('email', user.email)
+        user.name = json.get('name', user.name)
+        user.about = json.get('about', user.about)
+        user.birthday = json.get('birthday', user.birthday)
+        if 'avatar' in json:
+            user.avatar = Content.get_or_none(Content.id == json['avatar'])
+
+        user.save()
+
+    user = User.get(user.id)
+
     return jsonify({
         'success': 1,
-        'user': model_to_dict(user)
+        'user': model_to_dict(user, exclude=[User.password])
     })
 
 @bp.route("/register/", methods=['POST'])
@@ -137,11 +153,3 @@ def hashed(data):
     bdata = data.encode()
     sha1 = hashlib.sha1(bdata).hexdigest().encode()
     return hashlib.md5(sha1).hexdigest()
-
-def make_error(message, code):
-    response = jsonify({
-        'success': 0,
-        'error': message
-    })
-    response.status_code = code
-    return response

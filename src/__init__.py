@@ -1,3 +1,4 @@
+import os
 import datetime
 from flask import Flask
 from src.model import db
@@ -9,6 +10,8 @@ def create_app():
     app.config.from_object('src.config.default.Config')
     app.config.from_envvar('KOLENKA_CONFIG', silent=True)
 
+    os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
+
     db.init_database(app)
     db.create_tables()
 
@@ -16,13 +19,12 @@ def create_app():
     def motd():
         return "You are at the main page of kolenka api"
 
-    from src.endpoints import users
-    from src.endpoints import tokens
-    from src.endpoints import doc
-    
+    from src.endpoints import users, tokens, doc, content
+
     app.register_blueprint(users.bp)
     app.register_blueprint(tokens.bp)
     app.register_blueprint(doc.bp)
+    app.register_blueprint(content.bp)
 
     @app.before_request
     def before_request():
