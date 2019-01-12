@@ -22,16 +22,17 @@ def valid():
 
         Endpoint('GET', '/users/', 'users',
                  'Получение списка пользователей. Возможные параметры запроса: page - выбранная страница.'),
-        Endpoint('GET', '/users/<id>/', 'users',
-                 'Получение конкретного пользователя', status='Not available'),
+        Endpoint('GET', '/users/<id>/', 'users', 'Получение конкретного пользователя.'),
+        Endpoint('GET', '/users/self/', 'users',
+                 'Получение текущего пользователя. Необходима авторизация.'),
 
-        Endpoint('GET', '/users/register/', 'users', 'Регистрация пользователя', 
+        Endpoint('GET', '/users/register/', 'users', 'Регистрация пользователя',
         body={
             'username': 'test_user',
             'password': 'some-pass',
             'name': 'name',
             'email': 'email',
-        }, 
+        },
         response={
             'success': 1,
             'access_token': {
@@ -49,16 +50,16 @@ def valid():
         }
         ),
         Endpoint('GET', '/users/login/', 'users',
-                 'Получение токена авторизации'),
+                 'Получение токена авторизации.'),
 
         Endpoint('POST', '/tokens/valid/', 'token',
-                 'Проверить, валиден ли токен'),
-        Endpoint('POST', '/tokens/refresh/', 'token', 'Обновить токен'),
+                 'Проверить, валиден ли токен.'),
+        Endpoint('POST', '/tokens/refresh/', 'token', 'Обновить токен.'),
 
         Endpoint('GET', '/page/<name>/', 'page',
-                 'Получить статью <name>', status='Not available'),
+                 'Получить статью <name>.', status='Not available'),
         Endpoint('POST', '/page/<name>/', 'page',
-                 'Обновить статью <name>. Доступно только пользователям с ролью вдминистратор', status='Not available'),
+                 'Обновить статью <name>. Доступно только пользователям с ролью вдминистратор.', status='Not available'),
 
     ]
 

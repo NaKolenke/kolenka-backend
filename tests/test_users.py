@@ -24,10 +24,12 @@ def validate_tokens(json):
 
 @pytest.fixture
 def user():
-    User.create(login="test_user", password="0x:993fadc17393cdfb06dfb7f5dd0d13de", email="asd", registration_date=datetime.datetime.now(), last_active_date=datetime.datetime.now(), name="name", birthday=datetime.date.today(), about="", avatar="")
+    user = User.create(login="test_user", password="0x:993fadc17393cdfb06dfb7f5dd0d13de", email="asd", registration_date=datetime.datetime.now(), last_active_date=datetime.datetime.now(), name="name", birthday=datetime.date.today(), about="", avatar="")
 
     from src.model import db
     db.db_wrapper.database.close()
+
+    return user
 
 @pytest.fixture
 def users():
@@ -61,6 +63,17 @@ def test_empty_users(client):
     rv = client.get('/users/')
     assert len(rv.json['users']) == 0, 'We should have no users'
     assert rv.json['meta']['page_count'] == 0, 'There should be no pages'
+
+def test_user(client, user):
+    rv = client.get('/users/' + str(user.id) + '/')
+    assert rv.json['success'] == 1
+    assert rv.json['user']['login'] == 'test_user', 'With name test_user'
+
+def test_wrong_user(client, user):
+    rv = client.get('/users/' + str(user.id + 1) + '/')
+    assert rv.json['success'] == 0
+    assert 'user' not in rv.json
+    assert rv.json['error'] == 'There is no user with this id', 'Wrong error message'
 
 def test_registration(client):
     rv = client.post('/users/register/', json={

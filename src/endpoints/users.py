@@ -16,13 +16,24 @@ def users():
     query = User.select()
     paginated_query = PaginatedQuery(query, paginate_by=20)
     for u in paginated_query.get_object_list():
-        users.append(model_to_dict(u, exclude=[User.password]))
+        users.append(model_to_dict(u, exclude=[User.password, User.birthday, User.about]))
     return jsonify({
         'success': 1,
         'users': users,
         'meta': {
             'page_count': paginated_query.get_page_count()
         }
+    })
+
+@bp.route("/<id>/")
+def user(id):
+    user = User.get_or_none(User.id == id)
+    if user is None:
+        return make_error('There is no user with this id', 200)
+
+    return jsonify({
+        'success': 1,
+        'user': model_to_dict(user, exclude=[User.password]),
     })
 
 @bp.route("/self/")
