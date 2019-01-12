@@ -54,7 +54,7 @@ def current_user():
 
         user.save()
 
-    user = User.get(user.id)
+    user = User.get(User.id==user.id)
 
     return jsonify({
         'success': 1,

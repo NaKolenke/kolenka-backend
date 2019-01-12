@@ -15,7 +15,7 @@ def leave_feedback():
     if 'text' in json:
         Feedback.create(text=json['text'], user=get_user_from_request())
 
-        Telegram(current_app.config).notify_admin_channel('Пользователь ' + get_user_from_request().login + 'оставил отзыв: ' + json['text'])
+        Telegram(current_app.config).notify_admin_channel('Пользователь ' + get_user_from_request().login + ' оставил отзыв: ' + json['text'])
 
         return jsonify({
             'success': 1
