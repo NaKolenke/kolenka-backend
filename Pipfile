@@ -8,6 +8,7 @@ flask = "*"
 peewee = "*"
 "psycopg2-binary" = "*"
 requests = "*"
+flask-cors = "*"
 
 [dev-packages]
 pytest = "*"
