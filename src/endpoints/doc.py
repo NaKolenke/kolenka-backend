@@ -18,7 +18,7 @@ class Endpoint:
 @bp.route("/", methods=['GET'])
 def documentation():
     endpoints = [
-        Endpoint('GET', '/doc/', 'doc', 'Текущая документация'),
+        Endpoint('GET', '/doc/', 'doc', 'Текущая документация.'),
 
         Endpoint('GET', '/users/', 'users',
                  'Получение списка пользователей. Возможные параметры запроса: page - выбранная страница.'),
