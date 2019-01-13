@@ -1,11 +1,13 @@
 import os
 import datetime
 from flask import Flask
+from flask_cors import CORS
 from src.model import db
 from src.auth import get_user_from_request
 
 def create_app():
     app = Flask(__name__)
+    CORS(app)
 
     app.config.from_object('src.config.default.Config')
     app.config.from_envvar('KOLENKA_CONFIG', silent=True)
