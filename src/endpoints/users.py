@@ -1,14 +1,15 @@
 import datetime
 import hashlib
-from flask import current_app, Blueprint, request, jsonify, abort
-from playhouse.shortcuts import model_to_dict, dict_to_model
+from flask import current_app, Blueprint, request, jsonify
+from playhouse.shortcuts import model_to_dict
 from playhouse.flask_utils import PaginatedQuery
 from src.auth import login_required, get_user_from_request
-from src.model.models import User, Token, Content
+from src.model.models import User, Token, Content, Blog
 from src.utils import make_error
 
 
 bp = Blueprint('users', __name__, url_prefix='/users/')
+
 
 @bp.route("/")
 def users():
@@ -16,7 +17,9 @@ def users():
     query = User.select()
     paginated_query = PaginatedQuery(query, paginate_by=20)
     for u in paginated_query.get_object_list():
-        users.append(model_to_dict(u, exclude=[User.password, User.birthday, User.about]))
+        users.append(model_to_dict(
+            u, exclude=[User.password, User.birthday, User.about]))
+
     return jsonify({
         'success': 1,
         'users': users,
@@ -25,16 +28,40 @@ def users():
         }
     })
 
+
 @bp.route("/<id>/")
 def user(id):
     user = User.get_or_none(User.id == id)
     if user is None:
-        return make_error('There is no user with this id', 200)
+        return make_error('There is no user with this id', 404)
 
     return jsonify({
         'success': 1,
         'user': model_to_dict(user, exclude=[User.password]),
     })
+
+
+@bp.route("/<id>/blogs/")
+def user_blogs(id):
+    user = User.get_or_none(User.id == id)
+    if user is None:
+        return make_error('There is no user with this id', 404)
+
+    blogs = []
+
+    query = Blog.get_blogs_for_user(user)
+    paginated_query = PaginatedQuery(query, paginate_by=20)
+    for b in paginated_query.get_object_list():
+        blogs.append(model_to_dict(b))
+
+    return jsonify({
+        'success': 1,
+        'blogs': blogs,
+        'meta': {
+            'page_count': paginated_query.get_page_count()
+        }
+    })
+
 
 @bp.route("/self/", methods=['GET', 'POST'])
 @login_required
@@ -54,12 +81,13 @@ def current_user():
 
         user.save()
 
-    user = User.get(User.id==user.id)
+    user = User.get(User.id == user.id)
 
     return jsonify({
         'success': 1,
         'user': model_to_dict(user, exclude=[User.password])
     })
+
 
 @bp.route("/register/", methods=['POST'])
 def register():
@@ -87,29 +115,36 @@ def register():
     email = json['email']
     name = json['name']
 
-    user = User.get_or_none(User.login==username)
+    user = User.get_or_none(User.login == username)
     if user is not None:
         return make_error('User with this username already created', 400)
-    user = User.get_or_none(User.email==email)
+    user = User.get_or_none(User.email == email)
     if user is not None:
         return make_error('User with this email already created', 400)
 
-    user = User.create(login=username, password=salted(password, current_app.config['PASSWORD_SALT']), email=email, registration_date=datetime.datetime.now(), last_active_date=datetime.datetime.now(), name=name)
+    user = User.create(
+        login=username,
+        password=salted(password, current_app.config['PASSWORD_SALT']),
+        email=email,
+        registration_date=datetime.datetime.now(),
+        last_active_date=datetime.datetime.now(),
+        name=name)
 
     token = Token.generate_access_token(user)
     refresh_token = Token.generate_refresh_token(user)
 
     return jsonify({
-            'success': 1,
-            'access_token': {
-                'token': token.token,
-                'valid_until': token.valid_until.timestamp(),
-            },
-            'refresh_token': {
-                'token': refresh_token.token,
-                'valid_until': refresh_token.valid_until.timestamp(),
-            }
-        })
+        'success': 1,
+        'access_token': {
+            'token': token.token,
+            'valid_until': token.valid_until.timestamp(),
+        },
+        'refresh_token': {
+            'token': refresh_token.token,
+            'valid_until': refresh_token.valid_until.timestamp(),
+        }
+    })
+
 
 @bp.route("/login/", methods=['POST'])
 def login():
@@ -121,7 +156,7 @@ def login():
     username = json['username']
     password = json['password']
 
-    user = User.get_or_none(User.login==username)
+    user = User.get_or_none(User.login == username)
 
     if user is not None and authorize(user, password):
         token = Token.generate_access_token(user)
@@ -141,13 +176,16 @@ def login():
 
     return make_error('Can\'t authorize', 401)
 
+
 def authorize(user, password):
     if user.password == salted(password, current_app.config['PASSWORD_SALT']):
         return True
     return False
 
+
 def salted(data, salt):
     return '0x:' + hashed(data + '::' + salt)
+
 
 def hashed(data):
     bdata = data.encode()

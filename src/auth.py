@@ -3,6 +3,7 @@ import datetime
 from flask import request, jsonify
 from src.model.models import Token
 
+
 def login_required(f):
     @functools.wraps(f)
     def decorated_function(**kwargs):
@@ -23,6 +24,7 @@ def login_required(f):
 
     return decorated_function
 
+
 def get_token_from_request():
     if 'Authorization' not in request.headers:
         return None
@@ -30,11 +32,13 @@ def get_token_from_request():
     actual_token = Token.get_or_none((Token.token==token) & (Token.is_refresh_token==False))
     return actual_token
 
+
 def get_user_from_request():
     token = get_token_from_request()
     if token:
         return token.user
     return None
+
 
 def make_error(message, code):
     response = jsonify({

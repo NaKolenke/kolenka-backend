@@ -4,7 +4,8 @@ bp = Blueprint('doc', __name__, url_prefix='/doc/')
 
 
 class Endpoint:
-    def __init__(self, method, url, section, description, body='', response='', error_response='', status='Available'):
+    def __init__(self, method, url, section, description, body=None,
+                 response=None, error_response=None, status='Available'):
         self.method = method
         self.url = url
         self.section = section
@@ -21,13 +22,15 @@ def documentation():
         Endpoint('GET', '/doc/', 'doc', 'Текущая документация.'),
 
         Endpoint('GET', '/users/', 'users',
-                 'Получение списка пользователей. Возможные параметры запроса: page - выбранная страница.'),
+                 'Получение списка пользователей. ' +
+                 'Возможные параметры запроса: page - выбранная страница.'),
         Endpoint('GET', '/users/<id>/', 'users',
                  'Получение конкретного пользователя.'),
         Endpoint('GET', '/users/self/', 'users',
                  'Получение текущего пользователя. Необходима авторизация.'),
         Endpoint('POST', '/users/self/', 'users',
-                 'Изменение текущего пользователя. Необходима авторизация. Username изменить нельзя',
+                 'Изменение текущего пользователя. Необходима авторизация. ' +
+                 'Username изменить нельзя',
                  body={
                      'password': 'some_pass',
                      'email': 'aaa@Aaa',
@@ -37,7 +40,8 @@ def documentation():
                      'avatar': 32
                  }),
 
-        Endpoint('GET', '/users/register/', 'users', 'Регистрация пользователя',
+        Endpoint('GET', '/users/register/', 'users',
+                 'Регистрация пользователя',
                  body={
                      'username': 'test_user',
                      'password': 'some-pass',
@@ -62,6 +66,8 @@ def documentation():
                  ),
         Endpoint('GET', '/users/login/', 'users',
                  'Получение токена авторизации.'),
+        Endpoint('GET', '/users/<id>/blogs/', 'users',
+                 'Получение блогов пользователя.'),
 
         Endpoint('POST', '/tokens/valid/', 'token',
                  'Проверить, валиден ли токен.'),
@@ -70,7 +76,9 @@ def documentation():
         Endpoint('GET', '/page/<name>/', 'page',
                  'Получить статью <name>.', status='Not available'),
         Endpoint('POST', '/page/<name>/', 'page',
-                 'Обновить статью <name>. Доступно только пользователям с ролью администратор.', status='Not available'),
+                 'Обновить статью <name>. ' +
+                 'Доступно только пользователям с ролью администратор.',
+                 status='Not available'),
 
         Endpoint('POST', '/content/', 'content',
                  'Загрузить файл. В запросе необходимо передать поле file.'),
@@ -80,7 +88,40 @@ def documentation():
         Endpoint('POST', '/feedback/', 'feedback',
                  'Оставить отзыв. Необходима авторизация.'),
         Endpoint('GET', '/feedback/', 'feedback',
-                 'Получить список отзывов. Доступно только пользователям с ролью администратор.'),
+                 'Получить список отзывов. ' +
+                 'Доступно только пользователям с ролью администратор.'),
+
+        Endpoint('GET', '/blogs/', 'blogs',
+                 'Получить список публичных блогов. ' +
+                 'Возможные параметры запроса: page - выбранная страница.'),
+        Endpoint('POST', '/blogs/', 'blogs',
+                 'Создать новый блог'),
+        Endpoint('PUT', '/blogs/<id>/', 'blogs',
+                 'Редактировать блог'),
+        Endpoint('DELETE', '/blogs/<id>/', 'blogs',
+                 'Удалить блог'),
+        Endpoint('GET', '/blogs/<id>/', 'blogs',
+                 'Получение конкретного блога.'),
+        Endpoint('GET', '/blogs/<id>/readers/', 'blogs',
+                 'Получение читателей блога.'),
+        Endpoint('POST', '/blogs/<id>/invite/', 'blogs',
+                 'Отправить приглашение в блог.',
+                 body={
+                     'user': 45,
+                     'role': 'owner or reader or writer'
+                 },
+                 response={
+                     'success': 1,
+                     'invite': 1
+                 }),
+        Endpoint('POST', '/blogs/<id>/invite/', 'blogs',
+                 'Принять приглашение в блог.',
+                 body={
+                     'invite': 45
+                 },
+                 response={
+                     'success': 1
+                 }),
 
     ]
 

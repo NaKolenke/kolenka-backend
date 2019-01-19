@@ -1,5 +1,4 @@
 import datetime
-import flask
 import pytest
 from src.model.models import User, Token
 

@@ -1,32 +1,6 @@
-import os
 import datetime
-import flask
 import pytest
-from src.model.models import User, Token, Feedback
-
-@pytest.fixture
-def user_token():
-    user = User.create(login="test_user", password="0x:993fadc17393cdfb06dfb7f5dd0d13de", email="asd", registration_date=datetime.datetime.now(
-    ), last_active_date=datetime.datetime.now(), name="name", birthday=datetime.date.today(), about="", avatar=None)
-
-    token = Token.generate_access_token(user)
-
-    from src.model import db
-    db.db_wrapper.database.close()
-
-    return [user, token]
-
-@pytest.fixture
-def admin_token():
-    user = User.create(login="test_admin", password="0x:993fadc17393cdfb06dfb7f5dd0d13de", email="asd", registration_date=datetime.datetime.now(
-    ), last_active_date=datetime.datetime.now(), name="name", birthday=datetime.date.today(), about="", avatar=None, role=2)
-
-    token = Token.generate_access_token(user)
-
-    from src.model import db
-    db.db_wrapper.database.close()
-
-    return [user, token]
+from src.model.models import User, Feedback
 
 @pytest.fixture
 def feedback():
@@ -37,7 +11,6 @@ def feedback():
 
     from src.model import db
     db.db_wrapper.database.close()
-
 
 def test_leave_feedback(client, user_token):
     rv = client.post('/feedback/',

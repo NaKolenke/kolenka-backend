@@ -31,7 +31,7 @@ jobs:
       - run:
           name: run tests
           command: |
-            python3 -m pipenv run pytest --junitxml=test-results/pytest/results.xml
+            python3 -m pipenv run pytest --junitxml=test-results/pytest/results.xml --cov=src
       - store_test_results:
           path: test-results
 
