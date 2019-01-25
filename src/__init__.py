@@ -6,6 +6,7 @@ from src.model import db
 from src.auth import get_user_from_request
 from src.utils import CustomJSONEncoder
 
+
 def create_app():
     app = Flask(__name__)
     CORS(app)
@@ -24,7 +25,8 @@ def create_app():
     def motd():
         return "You are at the main page of kolenka api"
 
-    from src.endpoints import users, tokens, doc, content, feedback, blogs
+    from src.endpoints import users, tokens, doc, content, feedback, blogs, \
+        posts
 
     app.register_blueprint(users.bp)
     app.register_blueprint(tokens.bp)
@@ -32,6 +34,7 @@ def create_app():
     app.register_blueprint(content.bp)
     app.register_blueprint(feedback.bp)
     app.register_blueprint(blogs.bp)
+    app.register_blueprint(posts.bp)
 
     @app.before_request
     def before_request():

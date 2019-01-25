@@ -12,7 +12,8 @@ def create_tables():
     global db_wrapper
 
     from src.model.models import User, Token, Content, Feedback, Blog,\
-        BlogParticipiation, BlogInvite
+        BlogParticipiation, BlogInvite, Post, Comment, Tag, TagMark,\
+        Conversation, ConversationParticipiant, Message
 
     db_wrapper.database.create_tables([
         User,
@@ -21,7 +22,14 @@ def create_tables():
         Feedback,
         Blog,
         BlogParticipiation,
-        BlogInvite])
+        BlogInvite,
+        Post,
+        Comment,
+        Tag,
+        TagMark,
+        Conversation,
+        ConversationParticipiant,
+        Message])
 
     db_wrapper.database.close()
 

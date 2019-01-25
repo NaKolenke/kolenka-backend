@@ -122,6 +122,17 @@ def documentation():
                  response={
                      'success': 1
                  }),
+        
+        Endpoint('GET', '/posts/', 'posts',
+                 'Получение постов, главная страница.'),
+        Endpoint('GET', '/posts/<url>/', 'posts',
+                 'Получение одного поста'),
+        Endpoint('POST', '/posts/', 'posts',
+                 'Создать новый пост'),
+        Endpoint('PUT', '/posts/<url>/', 'posts',
+                 'Редактировать пост'),
+        Endpoint('DELETE', '/posts/<url>/', 'posts',
+                 'Удалить пост'),
 
     ]
 

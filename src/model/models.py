@@ -26,7 +26,7 @@ class User(db.db_wrapper.Model):
     name = CharField(null=True)
     birthday = DateField(null=True)
     about = TextField(null=True)
-    role = IntegerField(default=1)
+    is_admin = BooleanField(default=False)
 
     avatar = ForeignKeyField(model=Content, backref='avatar', null=True)
 
@@ -64,7 +64,7 @@ class Blog(db.db_wrapper.Model):
     updated_date = DateTimeField()
     description = TextField(null=True)
     title = TextField(null=True)
-    url = CharField(null=True)
+    url = CharField(null=True, unique=True)
 
     blog_type = IntegerField(choices=[
         (1, 'open'),  # Visible in list. Everyone can join and write.
@@ -131,3 +131,59 @@ class BlogInvite(db.db_wrapper.Model):
         (3, 'reader'),
     ], default=1)
 
+
+class Post(db.db_wrapper.Model):
+    blog = ForeignKeyField(model=Blog, null=True)
+    creator = ForeignKeyField(model=User)
+    created_date = DateTimeField()
+    updated_date = DateTimeField()
+    title = TextField(null=True)
+    cut_text = TextField(null=True)
+    text = TextField(null=True)
+    rating = IntegerField(default=0)
+    is_draft = BooleanField(default=True)
+    is_on_main = BooleanField(default=False)
+    reads = IntegerField(default=0)
+    url = CharField(null=True, unique=True)
+
+
+class Comment(db.db_wrapper.Model):
+    post = ForeignKeyField(model=Post)
+    creator = ForeignKeyField(model=User)
+    parent = ForeignKeyField(model='self', default=None)
+    level = IntegerField(default=0)
+    created_date = DateTimeField()
+    updated_date = DateTimeField()
+    text = TextField()
+    rating = IntegerField()
+
+
+class Tag(db.db_wrapper.Model):
+    title = TextField()
+    created_date = DateTimeField()
+
+
+class TagMark(db.db_wrapper.Model):
+    tag = ForeignKeyField(model=Tag)
+    post = ForeignKeyField(model=Post)
+
+
+class Conversation(db.db_wrapper.Model):
+    creator = ForeignKeyField(model=User)
+    created_date = DateTimeField()
+    title = TextField()
+
+
+class ConversationParticipiant(db.db_wrapper.Model):
+    user = ForeignKeyField(model=User)
+    conversation = ForeignKeyField(model=Conversation)
+
+
+class Message(db.db_wrapper.Model):
+    conversation = ForeignKeyField(model=Conversation)
+    creator = ForeignKeyField(model=User)
+    parent = ForeignKeyField(model='self', default=None)
+    level = IntegerField(default=0)
+    created_date = DateTimeField()
+    updated_date = DateTimeField()
+    text = TextField()

@@ -86,7 +86,7 @@ def user_not_in_blog_with_token():
 @pytest.fixture
 def blogs(user):
     for i in range(30):
-        Blog.create(title='test_blog' + str(i), url='test_blog', creator=user,
+        Blog.create(title='test_blog' + str(i), url='test_blog' + str(i), creator=user,
                     created_date=datetime.datetime.now(),
                     updated_date=datetime.datetime.now())
 
@@ -105,20 +105,20 @@ def test_blogs(client, blog):
 
 def test_blogs_pagination(client, blogs):
     rv = client.get('/blogs/')
-    assert len(rv.json['blogs']
-               ) == 20, 'We should have 20 blogs without pagination'
+    assert len(rv.json['blogs']) == 20, \
+        'We should have 20 blogs without pagination'
     assert rv.json['blogs'][0]['title'] == 'test_blog0', 'Wrong title'
     assert rv.json['meta']['page_count'] == 2, 'There should be two pages'
 
     rv = client.get('/blogs/?page=2')
-    assert len(rv.json['blogs']
-               ) == 10, 'We should have 10 blogs on second page'
+    assert len(rv.json['blogs']) == 10,\
+        'We should have 10 blogs on second page'
     assert rv.json['blogs'][0]['title'] == 'test_blog20', 'Wrong title'
     assert rv.json['meta']['page_count'] == 2, 'There should be two pages'
 
     rv = client.get('/blogs/?page=3')
-    assert len(rv.json['blogs']
-               ) == 0, 'We should have 0 blogs on nonexistent page'
+    assert len(rv.json['blogs']) == 0,\
+        'We should have 0 blogs on nonexistent page'
 
 
 def test_empty_blogs(client):

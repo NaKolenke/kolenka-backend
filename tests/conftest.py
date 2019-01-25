@@ -61,7 +61,7 @@ def admin_token():
         birthday=datetime.date.today(),
         about="",
         avatar=None,
-        role=2)
+        is_admin=True)
 
     token = Token.generate_access_token(user)
 

@@ -28,7 +28,7 @@ def leave_feedback():
 @login_required
 def get_feedback():
     user = get_user_from_request()
-    if user.role == 2:
+    if user.is_admin:
         feedback = []
         for f in Feedback.select():
             feedback.append(model_to_dict(f))
@@ -45,7 +45,7 @@ def get_feedback():
 @login_required
 def resolve(id):
     user = get_user_from_request()
-    if user.role == 2:
+    if user.is_admin:
         f = Feedback.get(id)
         f.is_resolved = True
         f.save()
