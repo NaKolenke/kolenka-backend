@@ -2,9 +2,9 @@ import datetime
 from flask import Blueprint, jsonify, request
 from playhouse.shortcuts import model_to_dict
 from playhouse.flask_utils import PaginatedQuery
-from src.auth import login_required, get_user_from_request
-from src.model.models import User, Post, Blog, BlogParticipiation, Content, \
-    BlogInvite
+from src.auth import get_user_from_request
+from src.model.models import User, Post, Blog, Content, \
+    Comment
 from src.utils import make_error
 
 
@@ -140,4 +140,76 @@ def post(url):
         return jsonify({
             'success': 1,
             'post': post_dict
+        })
+
+
+@bp.route("/<url>/comments/", methods=['GET', 'POST'])
+def comments(url):
+    post = Post.get_or_none(Post.url == url)
+    if post is None:
+        return make_error('There is no post with this url', 404)
+    if request.method == 'GET':
+        if post.is_draft:
+            user = get_user_from_request()
+            if user is None:
+                return make_error(
+                    'You doesn\'t have rights to do this action',
+                    403)
+
+            if post.creator != user:
+                return make_error(
+                    'You doesn\'t have rights to do this action',
+                    403)
+
+        comments = []
+
+        for c in Comment.select().where(Comment.post == post):
+            comment_dict = model_to_dict(
+                c,
+                exclude=[User.password, Comment.post])
+            comments.append(comment_dict)
+        return jsonify({
+            'success': 1,
+            'comments': comments,
+        })
+    elif request.method == 'POST':
+        user = get_user_from_request()
+        if user is None:
+            return make_error(
+                'You should be authorized to use this endpoint',
+                401)
+
+        json = request.get_json()
+
+        if 'text' in json:
+            text = json.get('text')
+        else:
+            return make_error(
+                'You should fill text field',
+                400)
+
+        parent = None
+        level = 0
+        if 'parent' in json:
+            parent = Comment.get_or_none(Comment.id == json['parent'])
+            if parent is not None:
+                level = parent.level + 1
+
+        comment = Comment.create(
+            post=post,
+            created_date=datetime.datetime.now(),
+            updated_date=datetime.datetime.now(),
+            creator=user,
+            text=text,
+            parent=parent,
+            level=level
+        )
+
+        comment_dict = model_to_dict(
+                comment,
+                exclude=[User.password, Comment.post])
+
+        return jsonify({
+            'success': 1,
+            'comment': comment_dict,
         })

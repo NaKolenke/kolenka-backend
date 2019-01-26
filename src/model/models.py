@@ -150,12 +150,12 @@ class Post(db.db_wrapper.Model):
 class Comment(db.db_wrapper.Model):
     post = ForeignKeyField(model=Post)
     creator = ForeignKeyField(model=User)
-    parent = ForeignKeyField(model='self', default=None)
+    parent = ForeignKeyField(model='self', default=None, null=True)
     level = IntegerField(default=0)
     created_date = DateTimeField()
     updated_date = DateTimeField()
     text = TextField()
-    rating = IntegerField()
+    rating = IntegerField(default=0)
 
 
 class Tag(db.db_wrapper.Model):

@@ -1,7 +1,7 @@
 import datetime
 import pytest
 from src.model.models import User, Blog, BlogParticipiation, \
-    Token, Post
+    Token, Post, Comment
 
 
 @pytest.fixture
@@ -86,6 +86,20 @@ def post(user, blog):
 
     return post
 
+
+@pytest.fixture
+def comment(user, post):
+    comment = Comment.create(
+        post=post,
+        creator=user,
+        created_date=datetime.datetime.now(),
+        updated_date=datetime.datetime.now(),
+        text="Some text")
+
+    from src.model import db
+    db.db_wrapper.database.close()
+
+    return comment
 
 @pytest.fixture
 def post_not_on_main(user, blog):
@@ -284,3 +298,25 @@ def test_delete_post_reader(client, post, reader_token):
     assert rv.json['error'] == 'You doesn\'t have rights to do this action'
 
     assert Post.select().count() == 1, 'Post was deleted'
+
+
+def test_post_comments(client, post, comment):
+    rv = client.get('/posts/' + post.url + '/comments/')
+    assert rv.json['success'] == 1
+    assert 'comments' in rv.json, 'We should have comments'
+    assert rv.json['comments'][0]['text'] == comment.text, 'Wrong title'
+
+
+def test_post_send_comment(client, post, user_token):
+    rv = client.post(
+        '/posts/' + post.url + '/comments/',
+        headers={
+            'Authorization': user_token[1].token
+        },
+        json={
+            'text': 'This is comment'
+        })
+    assert rv.json['success'] == 1
+
+    assert Comment.select().count() == 1
+    assert Comment.get().text == 'This is comment'

@@ -122,7 +122,7 @@ def documentation():
                  response={
                      'success': 1
                  }),
-        
+
         Endpoint('GET', '/posts/', 'posts',
                  'Получение постов, главная страница.'),
         Endpoint('GET', '/posts/<url>/', 'posts',
@@ -133,6 +133,11 @@ def documentation():
                  'Редактировать пост'),
         Endpoint('DELETE', '/posts/<url>/', 'posts',
                  'Удалить пост'),
+
+        Endpoint('GET', '/posts/<url>/comments', 'posts',
+                 'Получение списка комментариев к посту'),
+        Endpoint('POST', '/posts/<url>/comments', 'posts',
+                 'Отправка комментария'),
 
     ]
 
