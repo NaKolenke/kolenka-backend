@@ -150,13 +150,28 @@ def register():
 def login():
     json = request.get_json()
 
-    if not ('username' in json and 'password' in json):
-        return make_error('Username or password not in request', 400)
+    has_login = ('username' in json or 'email' in json)
+    has_password = ('password' in json)
+    if not has_login:
+        return make_error('Username or email not in request', 400)
+    if not has_password:
+        return make_error('Password not in request', 400)
 
-    username = json['username']
+    user = None
+    if 'username' in json:
+        username = json['username']
+
+        user = User.get_or_none(User.login == username)
+        if user is None:
+            user = User.get_or_none(User.email == username)
+    elif 'email' in json:
+        email = json['email']
+
+        user = User.get_or_none(User.login == email)
+        if user is None:
+            user = User.get_or_none(User.email == email)
+
     password = json['password']
-
-    user = User.get_or_none(User.login == username)
 
     if user is not None and authorize(user, password):
         token = Token.generate_access_token(user)
