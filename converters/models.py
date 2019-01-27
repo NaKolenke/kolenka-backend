@@ -592,7 +592,7 @@ class TuTalk(BaseModel):
     talk_date = DateTimeField()
     talk_date_last = DateTimeField()
     talk = IntegerField(column_name='talk_id')
-    talk_text = UnknownField()  # mediumtext
+    talk_text = TextField()  # mediumtext
     talk_title = CharField()
     talk_user_id_last = IntegerField()
     talk_user_ip = CharField()
@@ -658,9 +658,9 @@ class TuTopic(BaseModel):
 class TuTopicContent(BaseModel):
     topic_extra = TextField()
     topic = IntegerField(column_name='topic_id')
-    topic_text = UnknownField()  # longtext
+    topic_text = TextField()  # longtext
     topic_text_short = TextField()
-    topic_text_source = UnknownField()  # longtext
+    topic_text_source = TextField()  # longtext
 
     class Meta:
         table_name = 'tu_topic_content'

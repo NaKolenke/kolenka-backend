@@ -1,8 +1,12 @@
 import os
+import datetime
 
 
 def test_content(client, user_token):
-    filename = user_token[0].login + '1.png'
+    today = datetime.date.today()
+    filename = str(user_token[0].id) + '/'\
+        + str(today.year) + '/'\
+        + str(today.month) + '/' + '06316e26031f7c69c9cb7de53541e8e0.png'
     if os.path.isfile('uploads/' + filename):
         os.unlink('uploads/' + filename)
 

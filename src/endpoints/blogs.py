@@ -15,7 +15,7 @@ bp = Blueprint('blogs', __name__, url_prefix='/blogs/')
 def blogs():
     if request.method == 'GET':
         blogs = []
-        query = Blog.select()
+        query = Blog.select().where(Blog.blog_type != 3)
         paginated_query = PaginatedQuery(query, paginate_by=20)
         for b in paginated_query.get_object_list():
             blog_dict = model_to_dict(b, exclude=[User.password])
@@ -54,13 +54,13 @@ def blogs():
         })
 
 
-@bp.route("/<id>/", methods=['GET', 'PUT', 'DELETE'])
-def blog(id):
-    if request.method == 'GET':
-        blog = Blog.get_or_none(Blog.id == id)
-        if blog is None:
-            return make_error('There is no blog with this id', 404)
+@bp.route("/<url>/", methods=['GET', 'PUT', 'DELETE'])
+def blog(url):
+    blog = Blog.get_or_none(Blog.url == url)
+    if blog is None:
+        return make_error('There is no blog with this url', 404)
 
+    if request.method == 'GET':
         blog_dict = model_to_dict(blog, exclude=[User.password])
         blog_dict['readers'] = Blog.get_readers_count(blog)
         return jsonify({
@@ -68,10 +68,6 @@ def blog(id):
             'blog': blog_dict,
         })
     elif request.method == 'DELETE':
-        blog = Blog.get_or_none(Blog.id == id)
-        if blog is None:
-            return make_error('There is no blog with this id', 404)
-
         user = get_user_from_request()
         if user is None:
             return make_error(
@@ -90,10 +86,6 @@ def blog(id):
             'success': 1
         })
     elif request.method == 'PUT':
-        blog = Blog.get_or_none(Blog.id == id)
-        if blog is None:
-            return make_error('There is no blog with this id', 404)
-
         user = get_user_from_request()
         if user is None:
             return make_error(
@@ -125,11 +117,12 @@ def blog(id):
             'blog': blog_dict
         })
 
-@bp.route("/<id>/readers/")
-def readers(id):
-    blog = Blog.get_or_none(Blog.id == id)
+
+@bp.route("/<url>/readers/")
+def readers(url):
+    blog = Blog.get_or_none(Blog.url == url)
     if blog is None:
-        return make_error('There is no blog with this id', 404)
+        return make_error('There is no blog with this url', 404)
 
     readers = []
 
@@ -150,12 +143,12 @@ def readers(id):
     })
 
 
-@bp.route("/<id>/invite/", methods=['POST'])
+@bp.route("/<url>/invite/", methods=['POST'])
 @login_required
-def invites(id):
-    blog = Blog.get_or_none(Blog.id == id)
+def invites(url):
+    blog = Blog.get_or_none(Blog.url == url)
     if blog is None:
-        return make_error('There is no blog with this id', 404)
+        return make_error('There is no blog with this url', 404)
 
     user = get_user_from_request()
 

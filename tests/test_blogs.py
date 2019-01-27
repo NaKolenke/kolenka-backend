@@ -148,7 +148,7 @@ def test_create_blog(client, user_token):
 
 def test_edit_blog(client, blog, user_token):
     rv = client.put(
-        '/blogs/' + str(blog.id) + '/',
+        '/blogs/' + str(blog.url) + '/',
         json={
             'title': 'new title',
         },
@@ -162,7 +162,7 @@ def test_edit_blog(client, blog, user_token):
 
 def test_edit_blog_wrong_user(client, blog, user_not_in_blog_with_token):
     rv = client.put(
-        '/blogs/' + str(blog.id) + '/',
+        '/blogs/' + str(blog.url) + '/',
         json={
             'title': 'new title',
         },
@@ -178,7 +178,7 @@ def test_edit_blog_wrong_user(client, blog, user_not_in_blog_with_token):
 
 def test_edit_blog_reader(client, blog, reader_token):
     rv = client.put(
-        '/blogs/' + str(blog.id) + '/',
+        '/blogs/' + str(blog.url) + '/',
         json={
             'title': 'new title',
         },
@@ -194,7 +194,7 @@ def test_edit_blog_reader(client, blog, reader_token):
 
 def test_delete_blog(client, blog, user_token):
     rv = client.delete(
-        '/blogs/' + str(blog.id) + '/',
+        '/blogs/' + str(blog.url) + '/',
         headers={
             'Authorization': user_token[1].token
         })
@@ -205,7 +205,7 @@ def test_delete_blog(client, blog, user_token):
 
 def test_delete_blog_wrong_user(client, blog, user_not_in_blog_with_token):
     rv = client.delete(
-        '/blogs/' + str(blog.id) + '/',
+        '/blogs/' + str(blog.url) + '/',
         headers={
             'Authorization': user_not_in_blog_with_token[1].token
         })
@@ -217,7 +217,7 @@ def test_delete_blog_wrong_user(client, blog, user_not_in_blog_with_token):
 
 def test_delete_blog_reader(client, blog, reader_token):
     rv = client.delete(
-        '/blogs/' + str(blog.id) + '/',
+        '/blogs/' + str(blog.url) + '/',
         headers={
             'Authorization': reader_token[1].token
         })
@@ -228,14 +228,14 @@ def test_delete_blog_reader(client, blog, reader_token):
 
 
 def test_blog(client, blog):
-    rv = client.get('/blogs/' + str(blog.id) + '/')
+    rv = client.get('/blogs/' + str(blog.url) + '/')
     assert rv.json['success'] == 1
     assert rv.json['blog']['title'] == blog.title, 'Wrong blog title'
     assert rv.json['blog']['readers'] == 3, 'Wrong count of readers'
 
 
 def test_blog_readers(client, blog):
-    rv = client.get('/blogs/' + str(blog.id) + '/readers/')
+    rv = client.get('/blogs/' + str(blog.url) + '/readers/')
     assert rv.json['success'] == 1
     assert len(rv.json['readers']) == 3, 'Wrong count of readers'
     assert 'name' in rv.json['readers'][0], 'Readers schema'
@@ -254,7 +254,7 @@ def test_blog_invite(client, blog, user_token, user_not_in_blog_with_token):
     }
 
     rv = client.post(
-        '/blogs/' + str(blog.id) + '/invite/',
+        '/blogs/' + str(blog.url) + '/invite/',
         headers={
             'Authorization': user_token[1].token
         },
@@ -283,7 +283,7 @@ def test_blog_invite(client, blog, user_token, user_not_in_blog_with_token):
     db.db_wrapper.database.close()
 
     rv = client.post(
-        '/blogs/' + str(blog.id) + '/invite/',
+        '/blogs/' + str(blog.url) + '/invite/',
         headers={
             'Authorization': user_not_in_blog_with_token[1].token
         },
@@ -316,7 +316,7 @@ def test_blog_invite_cant_accept_other_user(
     }
 
     rv = client.post(
-        '/blogs/' + str(blog.id) + '/invite/',
+        '/blogs/' + str(blog.url) + '/invite/',
         headers={
             'Authorization': user_token[1].token
         },
@@ -344,7 +344,7 @@ def test_blog_invite_cant_accept_other_user(
     db.db_wrapper.database.close()
 
     rv = client.post(
-        '/blogs/' + str(blog.id) + '/invite/',
+        '/blogs/' + str(blog.url) + '/invite/',
         headers={
             'Authorization': other_user_and_token[1].token
         },
@@ -384,7 +384,7 @@ def test_blog_invite_incorrect(client, blog, user_token,
         'user': user_not_in_blog_with_token[0].id,
         'role': 'writer'
     }
-    rv = client.post('/blogs/' + str(blog.id) + '/invite/', json=body)
+    rv = client.post('/blogs/' + str(blog.url) + '/invite/', json=body)
     assert rv.json['success'] == 0
     assert rv.json['error'] == 'You should be authorized to use this endpoint'
     assert BlogInvite.select().count() == 0, 'There should be no invites'
@@ -393,7 +393,7 @@ def test_blog_invite_incorrect(client, blog, user_token,
     db.db_wrapper.database.close()
 
     rv = client.post(
-        '/blogs/' + str(blog.id) + '/invite/',
+        '/blogs/' + str(blog.url) + '/invite/',
         headers={
             'Authorization': user_not_in_blog_with_token[1].token
         },
@@ -412,7 +412,7 @@ def test_blog_invite_from_reader(client, blog, reader_token,
     }
 
     rv = client.post(
-        '/blogs/' + str(blog.id) + '/invite/',
+        '/blogs/' + str(blog.url) + '/invite/',
         headers={
             'Authorization': reader_token[1].token
         },
@@ -430,7 +430,7 @@ def test_blog_invite_from_reader(client, blog, reader_token,
     db.db_wrapper.database.close()
 
     rv = client.post(
-        '/blogs/' + str(blog.id) + '/invite/',
+        '/blogs/' + str(blog.url) + '/invite/',
         headers={
             'Authorization': reader_token[1].token
         },
