@@ -15,10 +15,12 @@ bp = Blueprint('posts', __name__, url_prefix='/posts/')
 def posts():
     if request.method == 'GET':
         posts = []
+
         query = Post.select().where(
             (Post.is_on_main) &
             (Post.is_draft == False)
-        )
+        ).order_by(Post.created_date.desc()):
+
         paginated_query = PaginatedQuery(query, paginate_by=20)
         for p in paginated_query.get_object_list():
             post_dict = model_to_dict(p, exclude=[User.password])
