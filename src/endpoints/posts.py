@@ -19,7 +19,7 @@ def posts():
         query = Post.select().where(
             (Post.is_on_main) &
             (Post.is_draft == False)
-        ).order_by(Post.created_date.desc()):
+        ).order_by(Post.created_date.desc())
 
         paginated_query = PaginatedQuery(query, paginate_by=20)
         for p in paginated_query.get_object_list():
