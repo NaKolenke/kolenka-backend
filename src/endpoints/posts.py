@@ -125,7 +125,11 @@ def post(url):
 
         post.title = json.get('title', post.title)
         post.text = json.get('text', post.text)
-        post.cut_text = json.get('cut_text', post.cut_text)
+
+        post.has_cut = '<cut>' in post.text
+        post.cut_text = post.text.split('<cut>')[0]
+        post.cut_name = json.get('cut_name', post.cut_name)
+
         post.is_draft = json.get('is_draft', post.is_draft)
         post.url = json.get('url', post.url)
 

@@ -12,6 +12,10 @@ from peewee import \
 from src.model import db
 
 
+class DatabaseInfo(db.db_wrapper.Model):
+    version = IntegerField()
+
+
 class Content(db.db_wrapper.Model):
     user = IntegerField()
     path = CharField()
@@ -145,6 +149,8 @@ class Post(db.db_wrapper.Model):
     is_on_main = BooleanField(default=False)
     reads = IntegerField(default=0)
     url = CharField(null=True, unique=True)
+    has_cut = BooleanField(default=False)
+    cut_name = CharField(default=None, null=True)
 
 
 class Comment(db.db_wrapper.Model):
