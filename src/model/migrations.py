@@ -3,12 +3,9 @@ from playhouse.migrate import migrate, SchemaMigrator
 
 
 def migration_v1(db, migrator: SchemaMigrator):
-    print('Applying miggration v1')
+    print('Applying migration v1')
 
     from src.model.models import Post
-
-    if hasattr(Post, 'has_cut'):
-        return
 
     with db.atomic():
         migrate(
@@ -31,6 +28,8 @@ migrations = [
 
 
 def migrate_schema(db):
+    print('Starting migration')
+
     from src.model.models import DatabaseInfo
 
     if isinstance(db, Proxy):
@@ -39,12 +38,13 @@ def migrate_schema(db):
     migrator = SchemaMigrator.from_database(db)
 
     if migrator is None:
-        print(db)
         raise Exception('Migrator is broken')
 
     info = DatabaseInfo.get_or_none(id=0)
     if info is None:
         info = DatabaseInfo.create(id=0, version=0)
+
+    print('Current database version is %d' % info.version)
 
     for i in range(info.version, len(migrations)):
         migrations[i](db, migrator)

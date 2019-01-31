@@ -33,11 +33,9 @@ def create_tables():
         Message,
         DatabaseInfo])
 
-    migrations.migrate_schema(db_wrapper.database)
-
     db_wrapper.database.close()
 
 
 def get_database():
     global db_wrapper
-    return db_wrapper
+    return db_wrapper.database
