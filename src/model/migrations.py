@@ -3,6 +3,8 @@ from playhouse.migrate import migrate, SchemaMigrator
 
 
 def migration_v1(db, migrator: SchemaMigrator):
+    print('Applying miggration v1')
+
     from src.model.models import Post
 
     if hasattr(Post, 'has_cut'):
