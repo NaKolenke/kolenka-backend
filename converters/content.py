@@ -6,12 +6,12 @@ from shutil import copyfile
 from src.model.models import Content
 from converters.models import TuMresourceTarget, TuMresource
 
+content_root = '/var/www/kolenka/uploads/'
+
 
 def get_path_from_mres(res):
     # @uploads/images/00/34/17/2017/06/11/0u28e7688f-12112fc6-41888ff5.png
-    path = res.path_url.replace('@uploads/', 'C:\\Users\\Pavel\\Work\\Prototypes_tests_misc\\kolenka\\backup\\uploads\\')
-
-    path = path.replace('/', '\\')
+    path = res.path_url.replace('@uploads/', content_root)
 
     return path
 
@@ -21,9 +21,7 @@ def get_path_from_url(url):
     url = url.replace('href="', '')
     url = url.replace('"', '')
     # /uploads/images/00/34/17/2017/06/11/0u28e7688f-12112fc6-41888ff5.png
-    path = url.replace('/uploads/', 'C:\\Users\\Pavel\\Work\\Prototypes_tests_misc\\kolenka\\backup\\uploads\\')
-
-    path = path.replace('/', '\\')
+    path = url.replace('/uploads/', content_root)
 
     return path
 
@@ -32,8 +30,7 @@ def create_content(content_from, content_res_type, content_res_id, user_id, year
     path = None
     if content_from:
         # http://kolenka.su/uploads/images/00/01/41/avatar/0u5b935089-6bff5537-1ba510f2.png
-        path = content_from.replace('http://kolenka.su/uploads/', 'C:\\Users\\Pavel\\Work\\Prototypes_tests_misc\\kolenka\\backup\\uploads\\')
-        path = path.replace('/', '\\')
+        path = content_from.replace('http://kolenka.su/uploads/', content_root)
 
     mresource_query = TuMresourceTarget\
         .select()\
