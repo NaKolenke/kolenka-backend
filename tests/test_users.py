@@ -104,16 +104,16 @@ def test_empty_users(client):
 
 
 def test_user(client, user):
-    rv = client.get('/users/' + str(user.id) + '/')
+    rv = client.get('/users/' + str(user.login) + '/')
     assert rv.json['success'] == 1
     assert rv.json['user']['login'] == 'test_user', 'With name test_user'
 
 
 def test_wrong_user(client, user):
-    rv = client.get('/users/' + str(user.id + 1) + '/')
+    rv = client.get('/users/' + user.login + str(1) + '/')
     assert rv.json['success'] == 0
     assert 'user' not in rv.json
-    assert rv.json['error'] == 'There is no user with this id',\
+    assert rv.json['error'] == 'There is no user with this login',\
         'Wrong error message'
 
 
@@ -268,7 +268,7 @@ def test_auth_failure(client, user):
 
 
 def test_user_blogs(client, user, blog):
-    rv = client.get('/users/' + str(user.id) + '/blogs/')
+    rv = client.get('/users/' + str(user.login) + '/blogs/')
     assert rv.json['success'] == 1
     assert len(rv.json['blogs']) == 1, 'Wrong count of blogs'
     assert 'title' in rv.json['blogs'][0], 'Blogs schema'
