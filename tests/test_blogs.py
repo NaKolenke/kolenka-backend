@@ -1,24 +1,7 @@
 import datetime
 import pytest
-from src.model.models import User, Blog, BlogParticipiation, Content,\
+from src.model.models import User, Blog, BlogParticipiation,\
     Token, BlogInvite
-
-
-@pytest.fixture
-def reader_token():
-    user = User.create(
-        login="reader",
-        password="0x:993fadc17393cdfb06dfb7f5dd0d13de",
-        email="asd",
-        registration_date=datetime.datetime.now(),
-        last_active_date=datetime.datetime.now())
-
-    token = Token.generate_access_token(user)
-
-    from src.model import db
-    db.db_wrapper.database.close()
-
-    return [user, token]
 
 
 @pytest.fixture
@@ -36,30 +19,6 @@ def other_user_and_token():
     db.db_wrapper.database.close()
 
     return [user, token]
-
-
-@pytest.fixture
-def blog(user, reader_token):
-    blog = Blog.create(
-        title='test_blog', url='test_blog', creator=user,
-        created_date=datetime.datetime.now(),
-        updated_date=datetime.datetime.now())
-    BlogParticipiation.create(blog=blog, user=user, role=1)
-
-    writer = User.create(
-        login="writer",
-        password="0x:993fadc17393cdfb06dfb7f5dd0d13de",
-        email="asd",
-        registration_date=datetime.datetime.now(),
-        last_active_date=datetime.datetime.now())
-    BlogParticipiation.create(blog=blog, user=writer, role=2)
-
-    BlogParticipiation.create(blog=blog, user=reader_token[0], role=3)
-
-    from src.model import db
-    db.db_wrapper.database.close()
-
-    return blog
 
 
 @pytest.fixture
@@ -86,7 +45,8 @@ def user_not_in_blog_with_token():
 @pytest.fixture
 def blogs(user):
     for i in range(30):
-        Blog.create(title='test_blog' + str(i), url='test_blog' + str(i), creator=user,
+        Blog.create(title='test_blog' + str(i), url='test_blog' + str(i), 
+                    creator=user,
                     created_date=datetime.datetime.now(),
                     updated_date=datetime.datetime.now())
 

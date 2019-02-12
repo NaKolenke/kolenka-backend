@@ -23,10 +23,11 @@ def create_app():
 
     @app.route("/")
     def motd():
-        return "You are at the main page of kolenka api"
+        return "You are at the main page of kolenka api." +\
+            "Current version is 1.0.0"
 
     from src.endpoints import users, tokens, doc, content, feedback, blogs, \
-        posts
+        posts, tags
 
     app.register_blueprint(users.bp)
     app.register_blueprint(tokens.bp)
@@ -35,6 +36,7 @@ def create_app():
     app.register_blueprint(feedback.bp)
     app.register_blueprint(blogs.bp)
     app.register_blueprint(posts.bp)
+    app.register_blueprint(tags.bp)
 
     @app.before_request
     def before_request():

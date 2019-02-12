@@ -17,7 +17,7 @@ def posts():
         posts = []
 
         query = Post.select().where(
-            #(Post.is_on_main) &
+            # (Post.is_on_main) &
             (Post.is_draft == False)
         ).order_by(Post.created_date.desc())
 
