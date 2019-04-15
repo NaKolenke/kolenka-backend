@@ -29,11 +29,11 @@ def users():
     })
 
 
-@bp.route("/<id>/")
-def user(id):
-    user = User.get_or_none(User.id == id)
+@bp.route("/<login>/")
+def user(login):
+    user = User.get_or_none(User.login == login)
     if user is None:
-        return make_error('There is no user with this id', 404)
+        return make_error('There is no user with this login', 404)
 
     return jsonify({
         'success': 1,
@@ -41,18 +41,18 @@ def user(id):
     })
 
 
-@bp.route("/<id>/blogs/")
-def user_blogs(id):
-    user = User.get_or_none(User.id == id)
+@bp.route("/<login>/blogs/")
+def user_blogs(login):
+    user = User.get_or_none(User.login == login)
     if user is None:
-        return make_error('There is no user with this id', 404)
+        return make_error('There is no user with this login', 404)
 
     blogs = []
 
     query = Blog.get_blogs_for_user(user)
     paginated_query = PaginatedQuery(query, paginate_by=20)
     for b in paginated_query.get_object_list():
-        blogs.append(model_to_dict(b))
+        blogs.append(model_to_dict(b, exclude=[User.password]))
 
     return jsonify({
         'success': 1,
