@@ -4,7 +4,7 @@ from playhouse.shortcuts import model_to_dict
 from playhouse.flask_utils import PaginatedQuery
 from src.auth import login_required, get_user_from_request
 from src.model.models import User, Blog, BlogParticipiation, Content, \
-    BlogInvite
+    BlogInvite, Post
 from src.utils import make_error
 
 
@@ -117,6 +117,31 @@ def blog(url):
             'blog': blog_dict
         })
 
+
+@bp.route("/<url>/posts/")
+def posts(url):
+    blog = Blog.get_or_none(Blog.url == url)
+    if blog is None:
+        return make_error('There is no blog with this url', 404)
+
+    posts = []
+
+    query = Post.select().where(
+        (Post.is_draft == False) &
+        (Post.blog == blog)
+    ).order_by(Post.created_date.desc())
+
+    paginated_query = PaginatedQuery(query, paginate_by=20)
+    for p in paginated_query.get_object_list():
+        post_dict = model_to_dict(p, exclude=[User.password])
+        posts.append(post_dict)
+    return jsonify({
+        'success': 1,
+        'posts': posts,
+        'meta': {
+            'page_count': paginated_query.get_page_count()
+        }
+    })
 
 @bp.route("/<url>/readers/")
 def readers(url):

@@ -152,6 +152,12 @@ class Post(db.db_wrapper.Model):
     has_cut = BooleanField(default=False)
     cut_name = CharField(default=None, null=True)
 
+    @classmethod
+    def get_posts_for_blog(cls, blog):
+        return Post \
+            .select()   \
+            .where(Post.blog == blog)
+
 
 class Comment(db.db_wrapper.Model):
     post = ForeignKeyField(model=Post)
