@@ -1,5 +1,6 @@
 import requests
 
+
 class Telegram():
     def __init__(self, config):
         self.bot_token = None
@@ -13,8 +14,12 @@ class Telegram():
             self.send_message(self.admin_channel_id, message)
 
     def send_message(self, id, message):
-        requests.post('https://api.telegram.org/bot' + self.bot_token + '/sendMessage', json={
-            'chat_id': id,
-            'parse_mode': 'html',
-            'text': message
-        })
+        requests.post(
+            'https://api.telegram.org/bot'
+            + self.bot_token
+            + '/sendMessage',
+            json={
+                'chat_id': id,
+                'parse_mode': 'html',
+                'text': message
+            })

@@ -22,7 +22,7 @@ class Content(db.db_wrapper.Model):
 
 
 class User(db.db_wrapper.Model):
-    login = CharField(unique=True)
+    username = CharField(unique=True)
     password = CharField()
     email = CharField()
     registration_date = DateTimeField()

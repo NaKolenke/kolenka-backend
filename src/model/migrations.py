@@ -22,8 +22,18 @@ def migration_v1(db, migrator: SchemaMigrator):
         p.save()
 
 
+def migration_v2(db, migrator: SchemaMigrator):
+    print('Applying migration v2')
+
+    with db.atomic():
+        migrate(
+            migrator.rename_column('user', 'login', 'username'),
+        )
+
+
 migrations = [
-    migration_v1
+    migration_v1,
+    migration_v2,
 ]
 
 

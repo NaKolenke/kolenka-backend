@@ -7,7 +7,7 @@ from src.model.models import User, \
 @pytest.fixture
 def user_not_in_blog_with_token():
     user = User.create(
-        login="user_not_in_blog",
+        username="user_not_in_blog",
         password="0x:993fadc17393cdfb06dfb7f5dd0d13de",
         email="asd",
         registration_date=datetime.datetime.now(),

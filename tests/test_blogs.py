@@ -7,7 +7,7 @@ from src.model.models import User, Blog, BlogParticipiation,\
 @pytest.fixture
 def other_user_and_token():
     user = User.create(
-        login="other_user",
+        username="other_user",
         password="0x:993fadc17393cdfb06dfb7f5dd0d13de",
         email="asd",
         registration_date=datetime.datetime.now(),
@@ -24,7 +24,7 @@ def other_user_and_token():
 @pytest.fixture
 def user_not_in_blog_with_token():
     user = User.create(
-        login="user_not_in_blog",
+        username="user_not_in_blog",
         password="0x:993fadc17393cdfb06dfb7f5dd0d13de",
         email="asd",
         registration_date=datetime.datetime.now(),
@@ -45,7 +45,7 @@ def user_not_in_blog_with_token():
 @pytest.fixture
 def blogs(user):
     for i in range(30):
-        Blog.create(title='test_blog' + str(i), url='test_blog' + str(i), 
+        Blog.create(title='test_blog' + str(i), url='test_blog' + str(i),
                     creator=user,
                     created_date=datetime.datetime.now(),
                     updated_date=datetime.datetime.now())

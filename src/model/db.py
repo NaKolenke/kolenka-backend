@@ -1,5 +1,4 @@
 from playhouse.flask_utils import FlaskDB
-from src.model import migrations
 
 db_wrapper = FlaskDB()
 

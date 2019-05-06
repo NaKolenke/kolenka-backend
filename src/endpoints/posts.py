@@ -18,7 +18,7 @@ def posts():
 
         query = Post.select().where(
             # (Post.is_on_main) &
-            (Post.is_draft == False)
+            (Post.is_draft == False)  # noqa: E712
         ).order_by(Post.created_date.desc())
 
         paginated_query = PaginatedQuery(query, paginate_by=20)

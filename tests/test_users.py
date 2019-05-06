@@ -58,7 +58,7 @@ def blog(user):
 def users():
     for i in range(30):
         User.create(
-            login="test_user" + str(i),
+            username="test_user" + str(i),
             password="0x:993fadc17393cdfb06dfb7f5dd0d13de",
             email="asd" + str(i),
             registration_date=datetime.datetime.now(),
@@ -75,7 +75,7 @@ def users():
 def test_users(client, user):
     rv = client.get('/users/')
     assert len(rv.json['users']) == 1, 'We should have only one user'
-    assert rv.json['users'][0]['login'] == 'test_user', 'With name test_user'
+    assert rv.json['users'][0]['username'] == 'test_user', 'With name test_user'
     assert rv.json['meta']['page_count'] == 1, 'There should be one page'
 
 
@@ -83,13 +83,13 @@ def test_users_pagination(client, users):
     rv = client.get('/users/')
     assert len(rv.json['users']
                ) == 20, 'We should have 20 users without pagination'
-    assert rv.json['users'][0]['login'] == 'test_user0', 'With name test_user0'
+    assert rv.json['users'][0]['username'] == 'test_user0', 'With name test_user0'
     assert rv.json['meta']['page_count'] == 2, 'There should be two pages'
 
     rv = client.get('/users/?page=2')
     assert len(rv.json['users']
                ) == 10, 'We should have 10 users on second page'
-    assert rv.json['users'][0]['login'] == 'test_user20', 'Wrong username'
+    assert rv.json['users'][0]['username'] == 'test_user20', 'Wrong username'
     assert rv.json['meta']['page_count'] == 2, 'There should be two pages'
 
     rv = client.get('/users/?page=3')
@@ -104,16 +104,16 @@ def test_empty_users(client):
 
 
 def test_user(client, user):
-    rv = client.get('/users/' + str(user.login) + '/')
+    rv = client.get('/users/' + str(user.username) + '/')
     assert rv.json['success'] == 1
-    assert rv.json['user']['login'] == 'test_user', 'With name test_user'
+    assert rv.json['user']['username'] == 'test_user', 'With name test_user'
 
 
 def test_wrong_user(client, user):
-    rv = client.get('/users/' + user.login + str(1) + '/')
+    rv = client.get('/users/' + user.username + str(1) + '/')
     assert rv.json['success'] == 0
     assert 'user' not in rv.json
-    assert rv.json['error'] == 'There is no user with this login',\
+    assert rv.json['error'] == 'There is no user with this username',\
         'Wrong error message'
 
 
@@ -268,7 +268,7 @@ def test_auth_failure(client, user):
 
 
 def test_user_blogs(client, user, blog):
-    rv = client.get('/users/' + str(user.login) + '/blogs/')
+    rv = client.get('/users/' + str(user.username) + '/blogs/')
     assert rv.json['success'] == 1
     assert len(rv.json['blogs']) == 1, 'Wrong count of blogs'
     assert 'title' in rv.json['blogs'][0], 'Blogs schema'

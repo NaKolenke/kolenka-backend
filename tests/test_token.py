@@ -20,7 +20,7 @@ def validate_tokens(json):
 
 @pytest.fixture
 def tokens():
-    user = User.create(login="test_user", password="0x:993fadc17393cdfb06dfb7f5dd0d13de", email="asd", registration_date=datetime.datetime.now(), last_active_date=datetime.datetime.now(), name="name", birthday=datetime.date.today(), about="", avatar=None)
+    user = User.create(username="test_user", password="0x:993fadc17393cdfb06dfb7f5dd0d13de", email="asd", registration_date=datetime.datetime.now(), last_active_date=datetime.datetime.now(), name="name", birthday=datetime.date.today(), about="", avatar=None)
 
     a = Token.generate_access_token(user)
     r = Token.generate_refresh_token(user)
@@ -34,14 +34,14 @@ def tokens():
     }
 
 def test_token_valid(client, tokens):
-    rv = client.post('/token/valid/', json={
+    rv = client.post('/token/validate/', json={
         'token': tokens['access_token'].token
     })
     assert rv.status_code == 200
     assert rv.json['success'] == 1
 
 def test_token_invalid(client, tokens):
-    rv = client.post('/token/valid/', json={
+    rv = client.post('/token/validate/', json={
         'token': '0'
     })
     assert rv.status_code == 400
@@ -55,7 +55,7 @@ def test_token_outdated(client, tokens):
     from src.model import db
     db.db_wrapper.database.close()
 
-    rv = client.post('/token/valid/', json={
+    rv = client.post('/token/validate/', json={
         'token': tokens['access_token'].token
     })
     assert rv.status_code == 400
@@ -100,7 +100,7 @@ def test_self(client, tokens):
     rv = client.get('/users/self/', headers=headers)
     assert rv.status_code == 200
     assert 'user' in rv.json
-    assert rv.json['user']['login'] == 'test_user'
+    assert rv.json['user']['username'] == 'test_user'
 
 def test_self_not_authorized(client, tokens):
     rv = client.get('/users/self/')

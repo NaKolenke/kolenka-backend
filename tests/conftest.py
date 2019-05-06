@@ -24,7 +24,7 @@ def client():
 @pytest.fixture
 def user():
     user = User.create(
-        login="test_user",
+        username="test_user",
         password="0x:993fadc17393cdfb06dfb7f5dd0d13de",
         email="asd",
         registration_date=datetime.datetime.now(),
@@ -53,7 +53,7 @@ def user_token(user):
 @pytest.fixture
 def admin_token():
     user = User.create(
-        login="admin_with_token",
+        username="admin_with_token",
         password="0x:993fadc17393cdfb06dfb7f5dd0d13de",
         email="asd",
         registration_date=datetime.datetime.now(),
@@ -75,7 +75,7 @@ def admin_token():
 @pytest.fixture
 def reader_token():
     user = User.create(
-        login="reader",
+        username="reader",
         password="0x:993fadc17393cdfb06dfb7f5dd0d13de",
         email="asd",
         registration_date=datetime.datetime.now(),
@@ -98,7 +98,7 @@ def blog(user, reader_token):
     BlogParticipiation.create(blog=blog, user=user, role=1)
 
     writer = User.create(
-        login="writer",
+        username="writer",
         password="0x:993fadc17393cdfb06dfb7f5dd0d13de",
         email="asd",
         registration_date=datetime.datetime.now(),

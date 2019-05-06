@@ -1,13 +1,12 @@
 import datetime
-import hashlib
-from flask import current_app, Blueprint, request, jsonify, abort
-from playhouse.shortcuts import model_to_dict, dict_to_model
-from src.model.models import User, Token
+from flask import Blueprint, request, jsonify
+from src.model.models import Token
 from src.utils import make_error
 
 bp = Blueprint('tokens', __name__, url_prefix='/token/')
 
-@bp.route("/valid/", methods=['POST'])
+
+@bp.route("/validate/", methods=['POST'])
 def valid():
     json = request.get_json()
 
@@ -24,7 +23,9 @@ def valid():
 
     token = json['token']
 
-    actual_token = Token.get_or_none((Token.token==token) & (Token.is_refresh_token==False))
+    actual_token = Token.get_or_none(
+        (Token.token == token) &
+        (Token.is_refresh_token == False))  # noqa: E712
 
     if actual_token is None:
         return make_error('Token is invalid', 400)
@@ -35,6 +36,7 @@ def valid():
     return jsonify({
             'success': 1
         })
+
 
 @bp.route("/refresh/", methods=['POST'])
 def refresh():
@@ -53,7 +55,9 @@ def refresh():
 
     token = json['token']
 
-    actual_token = Token.get_or_none((Token.token==token) & (Token.is_refresh_token==True))
+    actual_token = Token.get_or_none(
+        (Token.token == token) &
+        (Token.is_refresh_token == True))  # noqa: E712
 
     if actual_token is None:
         return make_error('Token is invalid', 400)

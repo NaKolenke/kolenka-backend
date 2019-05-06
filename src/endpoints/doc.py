@@ -69,7 +69,7 @@ def documentation():
         Endpoint('GET', '/users/<id>/blogs/', 'users',
                  'Получение блогов пользователя.'),
 
-        Endpoint('POST', '/tokens/valid/', 'token',
+        Endpoint('POST', '/tokens/validate/', 'token',
                  'Проверить, валиден ли токен.'),
         Endpoint('POST', '/tokens/refresh/', 'token', 'Обновить токен.'),
 

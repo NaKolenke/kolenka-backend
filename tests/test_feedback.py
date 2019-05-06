@@ -4,7 +4,7 @@ from src.model.models import User, Feedback
 
 @pytest.fixture
 def feedback():
-    user = User.create(login="feedback_user", password="0x:993fadc17393cdfb06dfb7f5dd0d13de", email="asd", registration_date=datetime.datetime.now(
+    user = User.create(username="feedback_user", password="0x:993fadc17393cdfb06dfb7f5dd0d13de", email="asd", registration_date=datetime.datetime.now(
     ), last_active_date=datetime.datetime.now(), name="name", birthday=datetime.date.today(), about="", avatar=None)
 
     Feedback.create(text='some text', user=user)

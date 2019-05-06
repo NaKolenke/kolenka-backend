@@ -29,11 +29,11 @@ def users():
     })
 
 
-@bp.route("/<login>/")
-def user(login):
-    user = User.get_or_none(User.login == login)
+@bp.route("/<username>/")
+def user(username):
+    user = User.get_or_none(User.username == username)
     if user is None:
-        return make_error('There is no user with this login', 404)
+        return make_error('There is no user with this username', 404)
 
     return jsonify({
         'success': 1,
@@ -41,11 +41,11 @@ def user(login):
     })
 
 
-@bp.route("/<login>/blogs/")
-def user_blogs(login):
-    user = User.get_or_none(User.login == login)
+@bp.route("/<username>/blogs/")
+def user_blogs(username):
+    user = User.get_or_none(User.username == username)
     if user is None:
-        return make_error('There is no user with this login', 404)
+        return make_error('There is no user with this username', 404)
 
     blogs = []
 
@@ -115,7 +115,7 @@ def register():
     email = json['email']
     name = json['name']
 
-    user = User.get_or_none(User.login == username)
+    user = User.get_or_none(User.username == username)
     if user is not None:
         return make_error('User with this username already created', 400)
     user = User.get_or_none(User.email == email)
@@ -123,7 +123,7 @@ def register():
         return make_error('User with this email already created', 400)
 
     user = User.create(
-        login=username,
+        username=username,
         password=salted(password, current_app.config['PASSWORD_SALT']),
         email=email,
         registration_date=datetime.datetime.now(),
@@ -161,13 +161,13 @@ def login():
     if 'username' in json:
         username = json['username']
 
-        user = User.get_or_none(User.login == username)
+        user = User.get_or_none(User.username == username)
         if user is None:
             user = User.get_or_none(User.email == username)
     elif 'email' in json:
         email = json['email']
 
-        user = User.get_or_none(User.login == email)
+        user = User.get_or_none(User.username == email)
         if user is None:
             user = User.get_or_none(User.email == email)
 

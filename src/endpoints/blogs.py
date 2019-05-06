@@ -127,7 +127,7 @@ def posts(url):
     posts = []
 
     query = Post.select().where(
-        (Post.is_draft == False) &
+        (Post.is_draft == False) &  # noqa: E712
         (Post.blog == blog)
     ).order_by(Post.created_date.desc())
 
@@ -142,6 +142,7 @@ def posts(url):
             'page_count': paginated_query.get_page_count()
         }
     })
+
 
 @bp.route("/<url>/readers/")
 def readers(url):
