@@ -3,7 +3,7 @@
 [![CircleCI](https://circleci.com/gh/NaKolenke/kolenka-backend.svg?style=shield)](https://circleci.com/gh/NaKolenke/kolenka-backend)
 [![Hits-of-Code](https://hitsofcode.com/github/NaKolenke/kolenka-backend)](https://hitsofcode.com/view/github/NaKolenke/kolenka-backend)
 
-kolenka.net - это сайт небольшого коммьюнити разработчиков игр. В этом репозитории лежит фронтенд всего сайта. У нас есть блоги, в которые пользователи могут писать посты, а другие пользователи могут комментировать эти посты.
+kolenka.net - это сайт небольшого коммьюнити разработчиков игр. В этом репозитории лежит бекенд всего сайта. У нас есть блоги, в которые пользователи могут писать посты, а другие пользователи могут комментировать эти посты.
 
 ## Используемые инструменты
 
