@@ -1,6 +1,9 @@
-# kolenka-backend
+<img src="logo.png"/>
 
-Репозитории для разработки бекенда https://kolenka.net
+[![CircleCI](https://circleci.com/gh/NaKolenke/kolenka-backend.svg?style=shield)](https://circleci.com/gh/NaKolenke/kolenka-backend)
+[![Hits-of-Code](https://hitsofcode.com/github/NaKolenke/kolenka-backend)](https://hitsofcode.com/view/github/NaKolenke/kolenka-backend)
+
+kolenka.net - это сайт небольшого коммьюнити разработчиков игр. В этом репозитории лежит фронтенд всего сайта. У нас есть блоги, в которые пользователи могут писать посты, а другие пользователи могут комментировать эти посты.
 
 ## Используемые инструменты
 
@@ -35,3 +38,7 @@ https://docs.python-guide.org/dev/virtualenvs/
 Чтобы выйти из сессии:
 
 `$ exit`
+
+## Как помочь
+
+Выбери задачу из [таск-трекера](https://github.com/NaKolenke/kolenka-doc/projects/1), сделай форк, внеси изменения, протестируй, сделай пулл-реквест. Все просто!
