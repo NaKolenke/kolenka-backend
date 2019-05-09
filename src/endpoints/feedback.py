@@ -48,7 +48,10 @@ def get_feedback():
 def resolve(id):
     user = get_user_from_request()
     if user.is_admin:
-        f = Feedback.get(id)
+        f = Feedback.get_or_none(Feedback.id == id)
+        if f is None:
+            return make_error('There is no feedback with this url', 404)
+
         f.is_resolved = True
         f.save()
 
