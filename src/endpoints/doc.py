@@ -95,9 +95,23 @@ def documentation():
                  'Получить список публичных блогов. ' +
                  'Возможные параметры запроса: page - выбранная страница.'),
         Endpoint('POST', '/blogs/', 'blogs',
-                 'Создать новый блог'),
+                 'Создать новый блог',
+                 body={
+                     'title': 'string',
+                     'description': 'string',
+                     'url': 'string',
+                     'blog_type': 'int, 1 - open, 2 - closed, 3 - hidden',
+                     'image': 'content_id',
+                 }),
         Endpoint('PUT', '/blogs/<id>/', 'blogs',
-                 'Редактировать блог'),
+                 'Редактировать блог',
+                 body={
+                     'title': 'string',
+                     'description': 'string',
+                     'url': 'string',
+                     'blog_type': 'int, 1 - open, 2 - closed, 3 - hidden',
+                     'image': 'content_id',
+                 }),
         Endpoint('DELETE', '/blogs/<id>/', 'blogs',
                  'Удалить блог'),
         Endpoint('GET', '/blogs/<id>/', 'blogs',
@@ -128,7 +142,15 @@ def documentation():
         Endpoint('GET', '/posts/<url>/', 'posts',
                  'Получение одного поста'),
         Endpoint('POST', '/posts/', 'posts',
-                 'Создать новый пост'),
+                 'Создать новый пост',
+                 body={
+                     'title': 'string',
+                     'text': 'string',
+                     'cut_name': 'string or null',
+                     'is_draft': 'bool',
+                     'url': 'string',
+                     'blog': 'blog_id',
+                 }),
         Endpoint('PUT', '/posts/<url>/', 'posts',
                  'Редактировать пост'),
         Endpoint('DELETE', '/posts/<url>/', 'posts',
@@ -137,7 +159,11 @@ def documentation():
         Endpoint('GET', '/posts/<url>/comments', 'posts',
                  'Получение списка комментариев к посту'),
         Endpoint('POST', '/posts/<url>/comments', 'posts',
-                 'Отправка комментария'),
+                 'Отправка комментария',
+                 body={
+                     'text': 'string',
+                     'parent': 'parent_id or 0'
+                 }),
 
     ]
 

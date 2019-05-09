@@ -23,7 +23,7 @@ def posts():
 
         paginated_query = PaginatedQuery(query, paginate_by=20)
         for p in paginated_query.get_object_list():
-            post_dict = model_to_dict(p, exclude=[User.password])
+            post_dict = prepare_post_to_response(p)
             posts.append(post_dict)
         return jsonify({
             'success': 1,
@@ -45,7 +45,9 @@ def posts():
             creator=user,
         )
 
-        post_dict = model_to_dict(post, exclude=[User.password])
+        fill_post_from_json(post, request.get_json())
+
+        post_dict = prepare_post_to_response(post)
 
         return jsonify({
             'success': 1,
@@ -72,7 +74,7 @@ def post(url):
                     'You doesn\'t have rights to do this action',
                     403)
 
-        post_dict = model_to_dict(post, exclude=[User.password])
+        post_dict = prepare_post_to_response(post)
 
         return jsonify({
             'success': 1,
@@ -121,28 +123,11 @@ def post(url):
                 'You doesn\'t have rights to do this action',
                 403)
 
-        json = request.get_json()
-
-        post.title = json.get('title', post.title)
-        post.text = json.get('text', post.text)
-
-        post.has_cut = '<cut>' in post.text
-        post.cut_text = post.text.split('<cut>')[0]
-        post.cut_name = json.get('cut_name', post.cut_name)
-
-        post.is_draft = json.get('is_draft', post.is_draft)
-        post.url = json.get('url', post.url)
-
-        if 'blog' in json:
-            post.blog = Blog.get_or_none(Blog.id == json['blog'])
-        if 'image' in json:
-            post.image = Content.get_or_none(Content.id == json['image'])
-
-        post.updated_date = datetime.datetime.now()
+        fill_post_from_json(post, request.get_json())
 
         post.save()
 
-        post_dict = model_to_dict(post, exclude=[User.password])
+        post_dict = prepare_post_to_response(post)
         return jsonify({
             'success': 1,
             'post': post_dict
@@ -219,3 +204,27 @@ def comments(url):
             'success': 1,
             'comment': comment_dict,
         })
+
+
+def prepare_post_to_response(post):
+    post_dict = model_to_dict(post, exclude=[User.password])
+    post_dict['comments'] = Comment.get_comments_count_for_post(post)
+    return post_dict
+
+
+def fill_post_from_json(post, json):
+    if json is not None:
+        post.title = json.get('title', post.title)
+        post.text = json.get('text', post.text)
+
+        post.has_cut = '<cut>' in post.text
+        post.cut_text = post.text.split('<cut>')[0]
+        post.cut_name = json.get('cut_name', post.cut_name)
+
+        post.is_draft = json.get('is_draft', post.is_draft)
+        post.url = json.get('url', post.url)
+
+        if 'blog' in json:
+            post.blog = Blog.get_or_none(Blog.id == json['blog'])
+
+    post.updated_date = datetime.datetime.now()

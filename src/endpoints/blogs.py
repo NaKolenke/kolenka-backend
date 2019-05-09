@@ -3,6 +3,7 @@ from flask import Blueprint, jsonify, request
 from playhouse.shortcuts import model_to_dict
 from playhouse.flask_utils import PaginatedQuery
 from src.auth import login_required, get_user_from_request
+from src.endpoints import posts
 from src.model.models import User, Blog, BlogParticipiation, Content, \
     BlogInvite, Post
 from src.utils import make_error
@@ -45,6 +46,8 @@ def blogs():
             blog=blog,
             user=user,
             role=1)
+
+        fill_blog_from_json(blog, request.get_json())
 
         blog_dict = model_to_dict(blog, exclude=[User.password])
 
@@ -98,16 +101,7 @@ def blog(url):
                 'You doesn\'t have rights to do this action',
                 403)
 
-        json = request.get_json()
-
-        blog.title = json.get('title', blog.title)
-        blog.description = json.get('description', blog.description)
-        blog.url = json.get('url', blog.url)
-        blog.blog_type = json.get('blog_type', blog.blog_type)
-        if 'image' in json:
-            blog.image = Content.get_or_none(Content.id == json['image'])
-
-        blog.updated_date = datetime.datetime.now()
+        fill_blog_from_json(blog, request.get_json())
 
         blog.save()
 
@@ -133,7 +127,7 @@ def posts(url):
 
     paginated_query = PaginatedQuery(query, paginate_by=20)
     for p in paginated_query.get_object_list():
-        post_dict = model_to_dict(p, exclude=[User.password])
+        post_dict = posts.prepare_post_to_response(p)
         posts.append(post_dict)
     return jsonify({
         'success': 1,
@@ -229,3 +223,15 @@ def invites(url):
             'success': 1,
             'invite': invite.id,
         })
+
+
+def fill_blog_from_json(blog, json):
+    if json is not None:
+        blog.title = json.get('title', blog.title)
+        blog.description = json.get('description', blog.description)
+        blog.url = json.get('url', blog.url)
+        blog.blog_type = json.get('blog_type', blog.blog_type)
+        if 'image' in json:
+            blog.image = Content.get_or_none(Content.id == json['image'])
+
+    blog.updated_date = datetime.datetime.now()

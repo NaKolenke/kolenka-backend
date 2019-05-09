@@ -169,6 +169,13 @@ class Comment(db.db_wrapper.Model):
     text = TextField()
     rating = IntegerField(default=0)
 
+    @classmethod
+    def get_comments_count_for_post(cls, post):
+        return Comment \
+            .select() \
+            .where(Comment.post == post) \
+            .count()
+
 
 class Tag(db.db_wrapper.Model):
     title = TextField()
