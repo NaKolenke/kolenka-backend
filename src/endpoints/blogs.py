@@ -128,7 +128,7 @@ def posts(url):
 
     paginated_query = PaginatedQuery(query, paginate_by=20)
     for p in paginated_query.get_object_list():
-        post_dict = posts.prepare_post_to_response(p)
+        post_dict = prepare_post_to_response(p)
         posts.append(post_dict)
     return jsonify({
         'success': 1,
