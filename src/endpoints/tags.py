@@ -14,8 +14,8 @@ def tags():
 
     query = Tag\
         .select()\
-        .group_by(Tag.title)\
         .join(TagMark)\
+        .group_by(Tag.title)\
         .order_by(Tag.created_date.desc())
 
     paginated_query = PaginatedQuery(query, paginate_by=20)
