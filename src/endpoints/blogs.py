@@ -119,7 +119,7 @@ def posts(url):
     if blog is None:
         return make_error('There is no blog with this url', 404)
 
-    posts = []
+    ret = []
 
     query = Post.select().where(
         (Post.is_draft == False) &  # noqa: E712
@@ -128,11 +128,11 @@ def posts(url):
 
     paginated_query = PaginatedQuery(query, paginate_by=20)
     for p in paginated_query.get_object_list():
-        post_dict = prepare_post_to_response(p)
-        posts.append(post_dict)
+        post_dict = posts.prepare_post_to_response(p)
+        ret.append(post_dict)
     return jsonify({
         'success': 1,
-        'posts': posts,
+        'posts': ret,
         'meta': {
             'page_count': paginated_query.get_page_count()
         }

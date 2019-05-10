@@ -3,8 +3,7 @@ from flask import Blueprint, jsonify, request
 from playhouse.shortcuts import model_to_dict
 from playhouse.flask_utils import PaginatedQuery
 from src.auth import get_user_from_request
-from src.model.models import User, Post, Blog, Content, \
-    Comment
+from src.model.models import User, Post, Blog, Comment
 from src.utils import make_error
 
 
