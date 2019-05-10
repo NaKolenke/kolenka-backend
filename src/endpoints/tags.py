@@ -13,11 +13,12 @@ bp = Blueprint('tags', __name__, url_prefix='/tags/')
 def tags():
     tags = []
 
+    ntags = fn.COUNT(TagMark.id)
     query = (Tag
-        .select(Tag, fn.COUNT(TagMark.id).alias('count'))
+        .select(Tag, ntags.alias('count'))
         .join(TagMark)
         .group_by(Tag.id)
-        .order_by(Tag.created_date.desc()))
+        .order_by(ntags.desc()))
 
     paginated_query = PaginatedQuery(query, paginate_by=20)
     for t in paginated_query.get_object_list():
