@@ -14,7 +14,7 @@ def tags():
     tags = []
 
     query = (Tag
-        .select(Tag, fn.COUNT(TagMark.id))
+        .select(Tag.title, Tag.id, fn.COUNT(TagMark.id).alias('count'))
         .join(TagMark)
         .group_by(Tag.title)
         .order_by(Tag.created_date.desc()))
