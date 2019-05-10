@@ -48,6 +48,7 @@ def blogs():
             role=1)
 
         fill_blog_from_json(blog, request.get_json())
+        blog.save()
 
         blog_dict = model_to_dict(blog, exclude=[User.password])
 

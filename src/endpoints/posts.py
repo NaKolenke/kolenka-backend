@@ -46,6 +46,7 @@ def posts():
         )
 
         fill_post_from_json(post, request.get_json())
+        post.save()
 
         post_dict = prepare_post_to_response(post)
 
