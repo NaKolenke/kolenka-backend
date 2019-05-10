@@ -1,4 +1,5 @@
 from flask import Blueprint, jsonify, request
+from peewee import fn
 from playhouse.shortcuts import model_to_dict
 from playhouse.flask_utils import PaginatedQuery
 from src.model.models import Post, Tag, TagMark, User, Blog
@@ -12,11 +13,11 @@ bp = Blueprint('tags', __name__, url_prefix='/tags/')
 def tags():
     tags = []
 
-    query = Tag\
-        .select()\
-        .join(TagMark)\
-        .group_by(Tag.title)\
-        .order_by(Tag.created_date.desc())
+    query = (Tag
+        .select(Tag, fn.COUNT(TagMark.id))
+        .join(TagMark)
+        .group_by(Tag.title)
+        .order_by(Tag.created_date.desc()))
 
     paginated_query = PaginatedQuery(query, paginate_by=20)
     for t in paginated_query.get_object_list():
