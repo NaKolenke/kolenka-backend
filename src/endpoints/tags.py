@@ -22,6 +22,7 @@ def tags():
     paginated_query = PaginatedQuery(query, paginate_by=20)
     for t in paginated_query.get_object_list():
         tag_dict = model_to_dict(t, exclude=[])
+        tag_dict['count'] = t.count
         tags.append(tag_dict)
     return jsonify({
         'success': 1,
