@@ -257,6 +257,26 @@ def invites(url):
         })
 
 
+@bp.route("/<url>/join/", methods=['GET', 'POST'])
+@login_required
+def join(url):
+    blog = Blog.get_or_none(Blog.url == url)
+    if blog is None:
+        return make_error('There is no blog with this url', 404)
+    if blog.blog_type != 1:
+        return make_error('You can join with blog only with invite', 403)
+
+    user = get_user_from_request()
+    if user is None:
+        return make_error('You should be authorized to use this endpoint', 401)
+    if BlogParticipiation.get_or_none(blog=blog, user=user) is None:
+        BlogParticipiation.create(blog=blog, user=user, role=3)
+
+    return jsonify({
+            'success': 1
+        })
+
+
 def fill_blog_from_json(blog, json):
     if json is not None:
         blog.title = json.get('title', blog.title)
