@@ -14,6 +14,7 @@ def tags():
 
     query = Tag\
         .select()\
+        .group_by(Tag.title)\
         .join(TagMark)\
         .order_by(Tag.created_date.desc())
 
