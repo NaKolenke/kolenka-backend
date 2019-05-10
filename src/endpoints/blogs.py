@@ -12,105 +12,128 @@ from src.utils import make_error
 bp = Blueprint('blogs', __name__, url_prefix='/blogs/')
 
 
-@bp.route("/", methods=['GET', 'POST'])
-def blogs():
-    if request.method == 'GET':
-        blogs = []
-        query = Blog.select().where(Blog.blog_type != 3)
-        paginated_query = PaginatedQuery(query, paginate_by=20)
-        for b in paginated_query.get_object_list():
-            blog_dict = model_to_dict(b, exclude=[User.password])
-            blog_dict['readers'] = Blog.get_readers_count(b)
-            blogs.append(blog_dict)
-        return jsonify({
-            'success': 1,
-            'blogs': blogs,
-            'meta': {
-                'page_count': paginated_query.get_page_count()
-            }
-        })
-    elif request.method == 'POST':
-        user = get_user_from_request()
-        if user is None:
-            return make_error(
-                'You should be authorized to use this endpoint',
-                401)
+@bp.route("/", methods=['GET'])
+def get_blogs():
+    blogs = []
+    query = Blog.select().where(Blog.blog_type != 3)
+    paginated_query = PaginatedQuery(query, paginate_by=20)
 
-        blog = Blog.create(
-            created_date=datetime.datetime.now(),
-            updated_date=datetime.datetime.now(),
-            creator=user,
-        )
+    for b in paginated_query.get_object_list():
+        blog_dict = model_to_dict(b, exclude=[User.password])
+        blog_dict['readers'] = Blog.get_readers_count(b)
+        blogs.append(blog_dict)
 
-        BlogParticipiation.create(
-            blog=blog,
-            user=user,
-            role=1)
-
-        fill_blog_from_json(blog, request.get_json())
-        blog.save()
-
-        blog_dict = model_to_dict(blog, exclude=[User.password])
-
-        return jsonify({
-            'success': 1,
-            'blog': blog_dict,
-        })
+    return jsonify({
+        'success': 1,
+        'blogs': blogs,
+        'meta': {
+            'page_count': paginated_query.get_page_count()
+        }
+    })
 
 
-@bp.route("/<url>/", methods=['GET', 'PUT', 'DELETE'])
-def blog(url):
+@bp.route("/", methods=['POST'])
+def create_blog():
+    user = get_user_from_request()
+    if user is None:
+        return make_error(
+            'You should be authorized to use this endpoint',
+            401)
+
+    blog = Blog.create(
+        created_date=datetime.datetime.now(),
+        updated_date=datetime.datetime.now(),
+        creator=user,
+    )
+
+    BlogParticipiation.create(
+        blog=blog,
+        user=user,
+        role=1)
+
+    fill_blog_from_json(blog, request.get_json())
+    blog.save()
+
+    blog_dict = model_to_dict(blog, exclude=[User.password])
+
+    return jsonify({
+        'success': 1,
+        'blog': blog_dict,
+    })
+
+
+@bp.route("/<url>/", methods=['GET'])
+def get_single_blog(url):
+    blog = Blog.get_or_none(Blog.url == url)
+    if blog is None:
+        return make_error('There is no blog with this url', 404)
+    user = get_user_from_request()
+    has_access = Blog.has_access(blog, user)
+
+    if not has_access:
+        return make_error(
+            'You doesn\'t have rights to do this action',
+            403)
+
+    blog_dict = model_to_dict(blog, exclude=[User.password])
+    blog_dict['readers'] = Blog.get_readers_count(blog)
+    return jsonify({
+        'success': 1,
+        'blog': blog_dict,
+    })
+
+
+@bp.route("/<url>/", methods=['PUT'])
+def edit_blog(url):
     blog = Blog.get_or_none(Blog.url == url)
     if blog is None:
         return make_error('There is no blog with this url', 404)
 
-    if request.method == 'GET':
-        blog_dict = model_to_dict(blog, exclude=[User.password])
-        blog_dict['readers'] = Blog.get_readers_count(blog)
-        return jsonify({
-            'success': 1,
-            'blog': blog_dict,
-        })
-    elif request.method == 'DELETE':
-        user = get_user_from_request()
-        if user is None:
-            return make_error(
-                'You should be authorized to use this endpoint',
-                401)
+    user = get_user_from_request()
+    if user is None:
+        return make_error(
+            'You should be authorized to use this endpoint',
+            401)
 
-        role = Blog.get_user_role(blog, user)
-        if role != 1:
-            return make_error(
-                'You doesn\'t have rights to do this action',
-                403)
+    role = Blog.get_user_role(blog, user)
+    if role != 1:
+        return make_error(
+            'You doesn\'t have rights to do this action',
+            403)
 
-        blog.delete_instance()
+    fill_blog_from_json(blog, request.get_json())
+    blog.save()
 
-        return jsonify({
-            'success': 1
-        })
-    elif request.method == 'PUT':
-        user = get_user_from_request()
-        if user is None:
-            return make_error(
-                'You should be authorized to use this endpoint',
-                401)
+    blog_dict = model_to_dict(blog, exclude=[User.password])
+    return jsonify({
+        'success': 1,
+        'blog': blog_dict
+    })
 
-        role = Blog.get_user_role(blog, user)
-        if role != 1:
-            return make_error(
-                'You doesn\'t have rights to do this action',
-                403)
 
-        fill_blog_from_json(blog, request.get_json())
+@bp.route("/<url>/", methods=['DELETE'])
+def delete_blog(url):
+    blog = Blog.get_or_none(Blog.url == url)
+    if blog is None:
+        return make_error('There is no blog with this url', 404)
 
-        blog.save()
+    user = get_user_from_request()
+    if user is None:
+        return make_error(
+            'You should be authorized to use this endpoint',
+            401)
 
-        blog_dict = model_to_dict(blog, exclude=[User.password])
-        return jsonify({
-            'success': 1,
-            'blog': blog_dict
-        })
+    role = Blog.get_user_role(blog, user)
+    if role != 1:
+        return make_error(
+            'You doesn\'t have rights to do this action',
+            403)
+
+    blog.delete_instance()
+
+    return jsonify({
+        'success': 1
+    })
 
 
 @bp.route("/<url>/posts/")
@@ -118,6 +141,10 @@ def posts(url):
     blog = Blog.get_or_none(Blog.url == url)
     if blog is None:
         return make_error('There is no blog with this url', 404)
+    user = get_user_from_request()
+    has_access = Blog.has_access(blog, user)
+    if not has_access:
+        return make_error('You doesn\'t have rights to do this action', 403)
 
     posts = []
 
@@ -144,6 +171,10 @@ def readers(url):
     blog = Blog.get_or_none(Blog.url == url)
     if blog is None:
         return make_error('There is no blog with this url', 404)
+    user = get_user_from_request()
+    has_access = Blog.has_access(blog, user)
+    if not has_access:
+        return make_error('You doesn\'t have rights to do this action', 403)
 
     readers = []
 

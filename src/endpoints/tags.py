@@ -1,7 +1,7 @@
 from flask import Blueprint, jsonify, request
 from playhouse.shortcuts import model_to_dict
 from playhouse.flask_utils import PaginatedQuery
-from src.model.models import Post, Tag, TagMark, User
+from src.model.models import Post, Tag, TagMark, User, Blog
 from src.utils import make_error
 
 
@@ -15,7 +15,6 @@ def tags():
     query = Tag\
         .select()\
         .join(TagMark)\
-        .group_by(Tag.title)\
         .order_by(Tag.created_date.desc())
 
     paginated_query = PaginatedQuery(query, paginate_by=20)
@@ -42,9 +41,12 @@ def tag(title):
     query = Post\
         .select()\
         .join(TagMark)\
+        .switch(Post)\
+        .join(Blog)\
         .where(
-            (Post.is_draft == False) &
-            (TagMark.tag == tag)
+            (Post.is_draft == False) &  # noqa: E712
+            (TagMark.tag == tag) &
+            (Blog.blog_type != 3)
         ).order_by(Post.created_date.desc())
 
     paginated_query = PaginatedQuery(query, paginate_by=20)

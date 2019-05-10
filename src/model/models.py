@@ -72,11 +72,10 @@ class Blog(db.db_wrapper.Model):
 
     blog_type = IntegerField(choices=[
         (1, 'open'),  # Visible in list. Everyone can join and write.
-        # Visible in list. Writers can join only if invited by other user.
-        # Everyone can read
-        (2, 'close'),  # Not visible in list.
+        (2, 'close'),  # Visible in list.
+        # Writers can join only if invited by other user. Everyone can read
+        (3, 'hidden'),  # Not visible in list.
         # Read and write can only invited users.
-        (3, 'hidden'),
     ], default=1)
 
     creator = ForeignKeyField(model=User, backref='blogs')
@@ -97,7 +96,10 @@ class Blog(db.db_wrapper.Model):
         return Blog \
             .select()   \
             .join(BlogParticipiation)   \
-            .where(BlogParticipiation.user == user)
+            .where(
+                (BlogParticipiation.user == user) &
+                (Blog.blog_type != 3)
+                )
 
     @classmethod
     def get_user_role(cls, blog, user):
@@ -112,6 +114,16 @@ class Blog(db.db_wrapper.Model):
 
         participiation = query.get()
         return participiation.role
+
+    @classmethod
+    def has_access(cls, blog, user):
+        if blog.blog_type == 3:
+            if user is None:
+                return False
+            role = Blog.get_user_role(blog, user)
+            if role is None:
+                return False
+        return True
 
 
 class BlogParticipiation(db.db_wrapper.Model):
