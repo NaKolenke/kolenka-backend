@@ -3,7 +3,7 @@ from flask import Blueprint, jsonify, request
 from playhouse.shortcuts import model_to_dict
 from playhouse.flask_utils import PaginatedQuery
 from src.auth import login_required, get_user_from_request
-from src.endpoints import posts
+from src.endpoints import posts as posts_endpoint
 from src.model.models import User, Blog, BlogParticipiation, Content, \
     BlogInvite, Post
 from src.utils import make_error
@@ -119,7 +119,7 @@ def posts(url):
     if blog is None:
         return make_error('There is no blog with this url', 404)
 
-    ret = []
+    posts = []
 
     query = Post.select().where(
         (Post.is_draft == False) &  # noqa: E712
@@ -128,11 +128,11 @@ def posts(url):
 
     paginated_query = PaginatedQuery(query, paginate_by=20)
     for p in paginated_query.get_object_list():
-        post_dict = posts.prepare_post_to_response(p)
-        ret.append(post_dict)
+        post_dict = posts_endpoint.prepare_post_to_response(p)
+        posts.append(post_dict)
     return jsonify({
         'success': 1,
-        'posts': ret,
+        'posts': posts,
         'meta': {
             'page_count': paginated_query.get_page_count()
         }
