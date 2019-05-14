@@ -4,7 +4,7 @@ from flask import current_app, Blueprint, request, jsonify
 from playhouse.shortcuts import model_to_dict
 from playhouse.flask_utils import PaginatedQuery
 from src.auth import login_required, get_user_from_request
-from src.model.models import User, Token, Content, Blog
+from src.model.models import User, Token, Content, Blog, Post
 from src.utils import make_error
 
 
@@ -57,6 +57,28 @@ def user_blogs(username):
     return jsonify({
         'success': 1,
         'blogs': blogs,
+        'meta': {
+            'page_count': paginated_query.get_page_count()
+        }
+    })
+
+
+@bp.route("/<username>/posts/")
+def user_posts(username):
+    user = User.get_or_none(User.username == username)
+    if user is None:
+        return make_error('There is no user with this username', 404)
+
+    posts = []
+
+    query = Post.get_posts_for_user(user)
+    paginated_query = PaginatedQuery(query, paginate_by=10)
+    for p in paginated_query.get_object_list():
+        posts.append(model_to_dict(p))
+
+    return jsonify({
+        'success': 1,
+        'posts': posts,
         'meta': {
             'page_count': paginated_query.get_page_count()
         }
