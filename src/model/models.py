@@ -172,7 +172,7 @@ class Post(db.db_wrapper.Model):
 
     @classmethod
     def get_posts_for_user(cls, user):
-        return Post \ 
+        return Post \
             .select() \
             .where(Post.creator == user)
 
