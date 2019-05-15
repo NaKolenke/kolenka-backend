@@ -10,6 +10,14 @@ def make_error(message, code=200):
     response.status_code = code
     return response
 
+def send_error(error, code=200):
+    response = jsonify({
+        'success': error.code,
+        'error': error.message
+    })
+    response.status_code = code
+    return response
+
 
 class CustomJSONEncoder(JSONEncoder):
 

@@ -5,10 +5,14 @@ from playhouse.shortcuts import model_to_dict
 from playhouse.flask_utils import PaginatedQuery
 from src.auth import login_required, get_user_from_request
 from src.model.models import User, Token, Content, Blog, Post
-from src.utils import make_error
+from src.utils import make_error, send_error
+from src.errors import error_not_found
 
 
 bp = Blueprint('users', __name__, url_prefix='/users/')
+
+
+public_exclude = [ User.password, User.email ]
 
 
 @bp.route("/")
@@ -16,9 +20,11 @@ def users():
     users = []
     query = User.select()
     paginated_query = PaginatedQuery(query, paginate_by=20)
+
     for u in paginated_query.get_object_list():
         users.append(model_to_dict(
-            u, exclude=[User.password, User.birthday, User.about]))
+            u, exclude=public_exclude + [User.birthday, User.about]
+        ))
 
     return jsonify({
         'success': 1,
@@ -32,27 +38,29 @@ def users():
 @bp.route("/<username>/")
 def user(username):
     user = User.get_or_none(User.username == username)
+
     if user is None:
-        return make_error('There is no user with this username', 404)
+        return send_error(error_not_found, 404)
 
     return jsonify({
         'success': 1,
-        'user': model_to_dict(user, exclude=[User.password]),
+        'user': model_to_dict(user, exclude=public_exclude),
     })
 
 
 @bp.route("/<username>/blogs/")
 def user_blogs(username):
     user = User.get_or_none(User.username == username)
+
     if user is None:
-        return make_error('There is no user with this username', 404)
+        return send_error(error_not_found, 404)
 
     blogs = []
-
     query = Blog.get_blogs_for_user(user)
     paginated_query = PaginatedQuery(query, paginate_by=20)
+
     for b in paginated_query.get_object_list():
-        blogs.append(model_to_dict(b, exclude=[User.password]))
+        blogs.append(model_to_dict(b, exclude=public_exclude))
 
     return jsonify({
         'success': 1,
@@ -66,15 +74,16 @@ def user_blogs(username):
 @bp.route("/<username>/posts/")
 def user_posts(username):
     user = User.get_or_none(User.username == username)
+
     if user is None:
-        return make_error('There is no user with this username', 404)
+        return send_error(error_not_found, 404)
 
     posts = []
-
     query = Post.get_posts_for_user(user)
     paginated_query = PaginatedQuery(query, paginate_by=10)
+    
     for p in paginated_query.get_object_list():
-        posts.append(model_to_dict(p, exclude=[User.password]))
+        posts.append(model_to_dict(p, exclude=public_exclude))
 
     return jsonify({
         'success': 1,
