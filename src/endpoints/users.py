@@ -6,7 +6,6 @@ from playhouse.flask_utils import PaginatedQuery
 from src.auth import login_required, get_user_from_request
 from src.model.models import User, Token, Content, Blog, Post
 from src.utils import make_error
-from src.endpoints.posts import prepare_post_to_response
 
 
 bp = Blueprint('users', __name__, url_prefix='/users/')
@@ -75,7 +74,7 @@ def user_posts(username):
     query = Post.get_posts_for_user(user)
     paginated_query = PaginatedQuery(query, paginate_by=10)
     for p in paginated_query.get_object_list():
-        posts.append(prepare_post_to_response(p))
+        posts.append(model_to_dict(p, exclude=[User.password]))
 
     return jsonify({
         'success': 1,
