@@ -12,8 +12,8 @@ def make_error(message, code=200):
 
 def send_error(error, code=200):
     response = jsonify({
-        'success': error.code,
-        'error': error.message
+        'success': 0,
+        'error': error
     })
     response.status_code = code
     return response
