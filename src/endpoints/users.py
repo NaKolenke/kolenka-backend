@@ -103,10 +103,10 @@ def user_drafts():
     query = Post.get_drafts_for_user(user)
     paginated_query = PaginatedQuery(query, paginate_by=10)
 
-    posts = list(map(
-        lambda x: model_to_dict(x, exclude=public_exclude), 
-        paginated_query.get_object_list()
-    ))
+    posts = []
+
+    for p in paginated_query.get_object_list():
+        posts.append(model_to_dict(p, exclude=public_exclude))
 
     return jsonify({
         'success': 1,
