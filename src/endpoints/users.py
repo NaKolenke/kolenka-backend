@@ -95,12 +95,9 @@ def user_posts(username):
 
 
 @bp.route("/drafts/")
-def user_drafts(username):
+@login_required
+def user_drafts():
     user = get_user_from_request()
-
-    if user is None:
-        return send_error(error_no_access, 404)
-
     user = User.get(User.id == user.id)
 
     query = Post.get_drafts_for_user(user)
