@@ -6,7 +6,7 @@ from playhouse.flask_utils import PaginatedQuery
 from src.auth import login_required, get_user_from_request
 from src.model.models import User, Token, Content, Blog, Post
 from src.utils import make_error, send_error
-from src.errors import error_not_found
+from src.errors import error_not_found, error_no_access
 
 
 bp = Blueprint('users', __name__, url_prefix='/users/')
@@ -84,6 +84,32 @@ def user_posts(username):
     
     for p in paginated_query.get_object_list():
         posts.append(model_to_dict(p, exclude=public_exclude))
+
+    return jsonify({
+        'success': 1,
+        'posts': posts,
+        'meta': {
+            'page_count': paginated_query.get_page_count()
+        }
+    })
+
+
+@bp.route("/drafts/")
+def user_drafts(username):
+    user = get_user_from_request()
+
+    if user is None:
+        return send_error(error_no_access, 404)
+
+    user = User.get(User.id == user.id)
+
+    query = Post.get_drafts_for_user(user)
+    paginated_query = PaginatedQuery(query, paginate_by=10)
+
+    posts = list(map(
+        lambda x: model_to_dict(x, exclude=public_exclude), 
+        paginated_query.get_object_list()
+    ))
 
     return jsonify({
         'success': 1,
