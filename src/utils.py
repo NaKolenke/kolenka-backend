@@ -13,7 +13,7 @@ def make_error(message, code=200):
 def send_error(error, code=200):
     response = jsonify({
         'success': 0,
-        'error': error
+        'error': error.__dict__
     })
     response.status_code = code
     return response
