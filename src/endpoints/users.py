@@ -5,6 +5,7 @@ from playhouse.shortcuts import model_to_dict
 from playhouse.flask_utils import PaginatedQuery
 from src.auth import login_required, get_user_from_request
 from src.model.models import User, Token, Content, Blog, Post
+from src.endpoints import posts as posts_endpoint
 from src import errors
 
 
@@ -82,7 +83,8 @@ def user_posts(username):
     paginated_query = PaginatedQuery(query, paginate_by=10)
 
     for p in paginated_query.get_object_list():
-        posts.append(model_to_dict(p, exclude=public_exclude))
+        post_dict = posts_endpoint.prepare_post_to_response(p)
+        posts.append(post_dict)
 
     return jsonify({
         'success': 1,
@@ -105,7 +107,8 @@ def user_drafts():
     posts = []
 
     for p in paginated_query.get_object_list():
-        posts.append(model_to_dict(p, exclude=public_exclude))
+        post_dict = posts_endpoint.prepare_post_to_response(p)
+        posts.append(post_dict)
 
     return jsonify({
         'success': 1,
