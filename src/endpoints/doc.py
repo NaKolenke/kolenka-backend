@@ -194,7 +194,7 @@ def documentation():
         }
         errors.append(e)
 
-    errors = sorted(errors, key=lambda e: e['body']['code'])
+    errors = sorted(errors, key=lambda e: e['error']['code'])
 
     return jsonify({
         'success': 1,
