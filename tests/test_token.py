@@ -46,7 +46,7 @@ def test_token_invalid(client, tokens):
     })
     assert rv.status_code == 400
     assert rv.json['success'] == 0
-    assert rv.json['error'] == 'Token is invalid'
+    assert rv.json['error']['code'] == 10
 
 def test_token_outdated(client, tokens):
     tokens['access_token'].valid_until=datetime.datetime.now()
@@ -60,7 +60,7 @@ def test_token_outdated(client, tokens):
     })
     assert rv.status_code == 400
     assert rv.json['success'] == 0
-    assert rv.json['error'] == 'Token is outdated'
+    assert rv.json['error']['code'] == 11
 
 def test_refresh_token(client, tokens):
     rv = client.post('/token/refresh/', json={
@@ -76,7 +76,7 @@ def test_refresh_token_invalid(client, tokens):
     })
     assert rv.status_code == 400
     assert rv.json['success'] == 0
-    assert rv.json['error'] == 'Token is invalid'
+    assert rv.json['error']['code'] == 10
     assert 'access_token' not in rv.json
 
 def test_refresh_token_outdated(client, tokens):
@@ -90,7 +90,7 @@ def test_refresh_token_outdated(client, tokens):
     })
     assert rv.status_code == 400
     assert rv.json['success'] == 0
-    assert rv.json['error'] == 'Token is outdated'
+    assert rv.json['error']['code'] == 11
     assert 'access_token' not in rv.json
 
 def test_self(client, tokens):
@@ -106,5 +106,5 @@ def test_self_not_authorized(client, tokens):
     rv = client.get('/users/self/')
     assert rv.status_code == 401
     assert rv.json['success'] == 0
-    assert rv.json['error'] == 'You should be authorized to use this endpoint'
+    assert rv.json['error']['code'] == 1
     assert 'user' not in rv.json

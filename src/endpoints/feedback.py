@@ -3,7 +3,7 @@ from playhouse.shortcuts import model_to_dict
 from src.model.models import Feedback
 from src.telegram import Telegram
 from src.auth import login_required, get_user_from_request
-from src.utils import make_error
+from src import errors
 
 bp = Blueprint('feedback', __name__, url_prefix='/feedback/')
 
@@ -23,7 +23,7 @@ def leave_feedback():
             'success': 1
         })
     else:
-        return make_error('No text provided')
+        return errors.wrong_payload('text')
 
 
 @bp.route("/", methods=['GET'])
@@ -40,7 +40,7 @@ def get_feedback():
             'feedback': feedback
         })
     else:
-        return make_error('Current user doesn\'t have rights to this action')
+        return errors.no_access()
 
 
 @bp.route("/<id>/", methods=['GET'])
@@ -50,7 +50,7 @@ def resolve(id):
     if user.is_admin:
         f = Feedback.get_or_none(Feedback.id == id)
         if f is None:
-            return make_error('There is no feedback with this url', 404)
+            return errors.not_found()
 
         f.is_resolved = True
         f.save()
@@ -59,4 +59,4 @@ def resolve(id):
             'success': 1
         })
     else:
-        return make_error('Current user doesn\'t have rights to this action')
+        return errors.no_access()

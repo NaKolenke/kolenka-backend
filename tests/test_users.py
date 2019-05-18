@@ -113,8 +113,7 @@ def test_wrong_user(client, user):
     rv = client.get('/users/' + user.username + str(1) + '/')
     assert rv.json['success'] == 0
     assert 'user' not in rv.json
-    assert rv.json['error'] == 'There is no user with this username',\
-        'Wrong error message'
+    assert rv.json['error']['code'] == 4
 
 
 def test_user_edit_no_auth(client, user_token):
@@ -122,9 +121,7 @@ def test_user_edit_no_auth(client, user_token):
         'name': 'other name'
     })
     assert rv.json['success'] == 0
-    assert rv.json['error'] == \
-        'You should be authorized to use this endpoint',\
-        'Error message is wrong'
+    assert rv.json['error']['code'] == 1
 
 
 def test_user_edit(client, user_token):
@@ -178,7 +175,7 @@ def test_registration_not_all_data(client):
     assert rv.status_code == 400
     assert rv.json['success'] == 0
     assert 'token' not in rv.json
-    assert rv.json['error'] == '"Email" not in request, "Name" not in request'
+    assert rv.json['error']['code'] == 5
     assert User.select().count() == 0
     assert Token.select().count() == 0
 
@@ -194,7 +191,7 @@ def test_registration_username_busy(client, user):
     assert rv.status_code == 400
     assert rv.json['success'] == 0
     assert 'token' not in rv.json
-    assert rv.json['error'] == 'User with this username already created'
+    assert rv.json['error']['code'] == 13
     assert User.select().count() == 1
     assert Token.select().count() == 0
 
@@ -209,7 +206,7 @@ def test_registration_email_busy(client, user):
     assert rv.status_code == 400
     assert rv.json['success'] == 0
     assert 'token' not in rv.json
-    assert rv.json['error'] == 'User with this email already created'
+    assert rv.json['error']['code'] == 12
     assert User.select().count() == 1
     assert Token.select().count() == 0
 

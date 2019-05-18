@@ -13,7 +13,7 @@ def create_app():
 
     app.config.from_object('src.config.default.Config')
     app.config.from_envvar('KOLENKA_CONFIG', silent=True)
-    
+
     app.json_encoder = CustomJSONEncoder
 
     os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)

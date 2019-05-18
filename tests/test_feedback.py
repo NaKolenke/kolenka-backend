@@ -33,9 +33,9 @@ def test_leave_feedback_no_text(client, user_token):
                      headers={
                          'authorization': user_token[1].token
                      })
-    assert rv.status_code == 200
+    assert rv.status_code == 400
     assert rv.json['success'] == 0
-    assert rv.json['error'] == 'No text provided'
+    assert rv.json['error']['code'] == 5
     assert Feedback.select().count() == 0
 
 
@@ -46,7 +46,7 @@ def test_leave_feedback_no_auth(client, user_token):
                      })
     assert rv.status_code == 401
     assert rv.json['success'] == 0
-    assert rv.json['error'] == 'You should be authorized to use this endpoint'
+    assert rv.json['error']['code'] == 1
     assert Feedback.select().count() == 0
 
 
@@ -55,18 +55,18 @@ def test_get_feedback_not_admin(client, user_token, feedback):
                     headers={
                         'authorization': user_token[1].token
                     })
-    assert rv.status_code == 200
+    assert rv.status_code == 403
     assert rv.json['success'] == 0
-    assert rv.json['error'] == 'Current user doesn\'t have rights to this action'
+    assert rv.json['error']['code'] == 3
     assert 'feedback' not in rv.json
 
     rv = client.get('/feedback/1/',
                     headers={
                         'authorization': user_token[1].token
                     })
-    assert rv.status_code == 200
+    assert rv.status_code == 403
     assert rv.json['success'] == 0
-    assert rv.json['error'] == 'Current user doesn\'t have rights to this action'
+    assert rv.json['error']['code'] == 3
 
 
 def test_get_feedback(client, admin_token, feedback):

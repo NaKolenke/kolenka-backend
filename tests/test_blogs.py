@@ -130,7 +130,7 @@ def test_edit_blog_wrong_user(client, blog, user_not_in_blog_with_token):
             'Authorization': user_not_in_blog_with_token[1].token
         })
     assert rv.json['success'] == 0
-    assert rv.json['error'] == 'You doesn\'t have rights to do this action'
+    assert rv.json['error']['code'] == 3
 
     assert Blog.get().title == blog.title, 'Blog title changed'
     assert Blog.get().title != 'new title'
@@ -146,7 +146,7 @@ def test_edit_blog_reader(client, blog, reader_token):
             'Authorization': reader_token[1].token
         })
     assert rv.json['success'] == 0
-    assert rv.json['error'] == 'You doesn\'t have rights to do this action'
+    assert rv.json['error']['code'] == 3
 
     assert Blog.get().title == blog.title, 'Blog title changed'
     assert Blog.get().title != 'new title'
@@ -170,7 +170,7 @@ def test_delete_blog_wrong_user(client, blog, user_not_in_blog_with_token):
             'Authorization': user_not_in_blog_with_token[1].token
         })
     assert rv.json['success'] == 0
-    assert rv.json['error'] == 'You doesn\'t have rights to do this action'
+    assert rv.json['error']['code'] == 3
 
     assert Blog.select().count() == 1, 'Blog was deleted'
 
@@ -182,7 +182,7 @@ def test_delete_blog_reader(client, blog, reader_token):
             'Authorization': reader_token[1].token
         })
     assert rv.json['success'] == 0
-    assert rv.json['error'] == 'You doesn\'t have rights to do this action'
+    assert rv.json['error']['code'] == 3
 
     assert Blog.select().count() == 1, 'Blog was deleted'
 
@@ -312,7 +312,7 @@ def test_blog_invite_cant_accept_other_user(
             'invite': rv.json['invite']
         })
     assert rv.json['success'] == 0
-    assert rv.json['error'] == 'You can\'t accept this invite'
+    assert rv.json['error']['code'] == 3
     assert BlogInvite.select().count() == 1, 'There should be one invite'
 
     invite = BlogInvite.get()
@@ -346,7 +346,7 @@ def test_blog_invite_incorrect(client, blog, user_token,
     }
     rv = client.post('/blogs/' + str(blog.url) + '/invite/', json=body)
     assert rv.json['success'] == 0
-    assert rv.json['error'] == 'You should be authorized to use this endpoint'
+    assert rv.json['error']['code'] == 1
     assert BlogInvite.select().count() == 0, 'There should be no invites'
 
     from src.model import db
@@ -359,7 +359,7 @@ def test_blog_invite_incorrect(client, blog, user_token,
         },
         json=body)
     assert rv.json['success'] == 0
-    assert rv.json['error'] == 'You are not participiate in this blog'
+    assert rv.json['error']['code'] == 3
     assert BlogInvite.select().count() == 0, 'There should be no invites'
 
 
@@ -378,7 +378,7 @@ def test_blog_invite_from_reader(client, blog, reader_token,
         },
         json=body)
     assert rv.json['success'] == 0
-    assert rv.json['error'] == 'You doesn\'t have rights to do this action'
+    assert rv.json['error']['code'] == 3
     assert BlogInvite.select().count() == 0, 'There should be no invites'
 
     body = {

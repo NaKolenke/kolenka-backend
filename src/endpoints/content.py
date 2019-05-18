@@ -6,7 +6,7 @@ from flask import Blueprint, jsonify, request, current_app, send_file
 from playhouse.shortcuts import model_to_dict
 from src.auth import login_required, get_user_from_request
 from src.model.models import Content
-from src.utils import make_error
+from src import errors
 
 
 bp = Blueprint('content', __name__, url_prefix='/content/')
@@ -23,11 +23,11 @@ def allowed_file(filename):
 @login_required
 def upload():
     if 'file' not in request.files:
-        return make_error('No file part')
+        return errors.content_no_file()
 
     uploaded_file = request.files['file']
     if uploaded_file.filename == '':
-        return make_error('No selected file')
+        return errors.content_no_file()
 
     if uploaded_file and allowed_file(uploaded_file.filename):
         user = get_user_from_request()
@@ -65,4 +65,4 @@ def get(id):
     if content is not None:
         return send_file(content.path)
     else:
-        return make_error('No file', 404)
+        return errors.not_found()

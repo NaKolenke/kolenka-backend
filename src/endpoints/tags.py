@@ -3,7 +3,7 @@ from peewee import fn
 from playhouse.shortcuts import model_to_dict
 from playhouse.flask_utils import PaginatedQuery
 from src.model.models import Post, Tag, TagMark, User, Blog
-from src.utils import make_error
+from src import errors
 
 
 bp = Blueprint('tags', __name__, url_prefix='/tags/')
@@ -15,10 +15,10 @@ def tags():
 
     ntags = fn.COUNT(TagMark.id)
     query = (Tag
-        .select(Tag, ntags.alias('count'))
-        .join(TagMark)
-        .group_by(Tag.id)
-        .order_by(ntags.desc()))
+             .select(Tag, ntags.alias('count'))
+             .join(TagMark)
+             .group_by(Tag.id)
+             .order_by(ntags.desc()))
 
     paginated_query = PaginatedQuery(query, paginate_by=20)
     for t in paginated_query.get_object_list():
@@ -38,7 +38,7 @@ def tags():
 def tag(title):
     tag = Tag.get_or_none(Tag.title == title)
     if tag is None:
-        return make_error('There is no tag with this url', 404)
+        return errors.not_found()
 
     posts = []
 
@@ -71,7 +71,7 @@ def tag(title):
 def suggestion():
     json = request.get_json()
     if 'title' not in json:
-        return make_error('Provide title in response body', 400)
+        return errors.wrong_payload('title')
 
     title = json['title']
 

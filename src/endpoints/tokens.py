@@ -1,7 +1,7 @@
 import datetime
 from flask import Blueprint, request, jsonify
 from src.model.models import Token
-from src.utils import make_error
+from src import errors
 
 bp = Blueprint('tokens', __name__, url_prefix='/token/')
 
@@ -10,16 +10,8 @@ bp = Blueprint('tokens', __name__, url_prefix='/token/')
 def valid():
     json = request.get_json()
 
-    errors = []
-
     if 'token' not in json:
-        errors.append('"Token" not in request')
-
-    if len(errors) > 0:
-        message = ''
-        for e in errors:
-            message = message + e + ', '
-        return make_error(message[0:-2], 400)
+        return errors.wrong_payload('token')
 
     token = json['token']
 
@@ -28,10 +20,10 @@ def valid():
         (Token.is_refresh_token == False))  # noqa: E712
 
     if actual_token is None:
-        return make_error('Token is invalid', 400)
+        return errors.token_invalid()
 
     if actual_token.valid_until < datetime.datetime.now():
-        return make_error('Token is outdated', 400)
+        return errors.token_outdated()
 
     return jsonify({
             'success': 1
@@ -42,16 +34,8 @@ def valid():
 def refresh():
     json = request.get_json()
 
-    errors = []
-
     if 'token' not in json:
-        errors.append('"Token" not in request')
-
-    if len(errors) > 0:
-        message = ''
-        for e in errors:
-            message = message + e + ', '
-        return make_error(message[0:-2], 400)
+        return errors.wrong_payload('token')
 
     token = json['token']
 
@@ -60,10 +44,10 @@ def refresh():
         (Token.is_refresh_token == True))  # noqa: E712
 
     if actual_token is None:
-        return make_error('Token is invalid', 400)
+        return errors.token_invalid()
 
     if actual_token.valid_until < datetime.datetime.now():
-        return make_error('Token is outdated', 400)
+        return errors.token_outdated()
 
     user = actual_token.user
 

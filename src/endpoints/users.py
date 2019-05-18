@@ -5,14 +5,13 @@ from playhouse.shortcuts import model_to_dict
 from playhouse.flask_utils import PaginatedQuery
 from src.auth import login_required, get_user_from_request
 from src.model.models import User, Token, Content, Blog, Post
-from src.utils import make_error, send_error
-from src.errors import error_not_found, error_no_access
+from src import errors
 
 
 bp = Blueprint('users', __name__, url_prefix='/users/')
 
 
-public_exclude = [ User.password, User.email ]
+public_exclude = [User.password, User.email]
 
 
 @bp.route("/")
@@ -40,7 +39,7 @@ def user(username):
     user = User.get_or_none(User.username == username)
 
     if user is None:
-        return send_error(error_not_found, 404)
+        return errors.not_found()
 
     return jsonify({
         'success': 1,
@@ -53,7 +52,7 @@ def user_blogs(username):
     user = User.get_or_none(User.username == username)
 
     if user is None:
-        return send_error(error_not_found, 404)
+        return errors.not_found()
 
     blogs = []
     query = Blog.get_blogs_for_user(user)
@@ -76,12 +75,12 @@ def user_posts(username):
     user = User.get_or_none(User.username == username)
 
     if user is None:
-        return send_error(error_not_found, 404)
+        return errors.not_found()
 
     posts = []
     query = Post.get_posts_for_user(user)
     paginated_query = PaginatedQuery(query, paginate_by=10)
-    
+
     for p in paginated_query.get_object_list():
         posts.append(model_to_dict(p, exclude=public_exclude))
 
@@ -147,22 +146,19 @@ def current_user():
 def register():
     json = request.get_json()
 
-    errors = []
+    missed_payload = []
 
     if 'username' not in json:
-        errors.append('"Username" not in request')
+        missed_payload.append('username')
     if 'password' not in json:
-        errors.append('"Password" not in request')
+        missed_payload.append('password')
     if 'email' not in json:
-        errors.append('"Email" not in request')
+        missed_payload.append('email')
     if 'name' not in json:
-        errors.append('"Name" not in request')
+        missed_payload.append('name')
 
-    if len(errors) > 0:
-        message = ''
-        for e in errors:
-            message = message + e + ', '
-        return make_error(message[0:-2], 400)
+    if len(missed_payload) > 0:
+        return errors.wrong_payload(missed_payload)
 
     username = json['username']
     password = json['password']
@@ -171,10 +167,10 @@ def register():
 
     user = User.get_or_none(User.username == username)
     if user is not None:
-        return make_error('User with this username already created', 400)
+        return errors.registration_username_busy()
     user = User.get_or_none(User.email == email)
     if user is not None:
-        return make_error('User with this email already created', 400)
+        return errors.registration_email_busy()
 
     user = User.create(
         username=username,
@@ -207,9 +203,9 @@ def login():
     has_login = ('username' in json or 'email' in json)
     has_password = ('password' in json)
     if not has_login:
-        return make_error('Username or email not in request', 400)
+        return errors.wrong_payload('username', 'email')
     if not has_password:
-        return make_error('Password not in request', 400)
+        return errors.wrong_payload('password')
 
     user = None
     if 'username' in json:
@@ -243,7 +239,7 @@ def login():
             }
         })
 
-    return make_error('Can\'t authorize', 401)
+    return errors.not_authorized()
 
 
 def authorize(user, password):

@@ -6,7 +6,7 @@ from src.auth import login_required, get_user_from_request
 from src.endpoints import posts as posts_endpoint
 from src.model.models import User, Blog, BlogParticipiation, Content, \
     BlogInvite, Post
-from src.utils import make_error
+from src import errors
 
 
 bp = Blueprint('blogs', __name__, url_prefix='/blogs/')
@@ -36,9 +36,7 @@ def get_blogs():
 def create_blog():
     user = get_user_from_request()
     if user is None:
-        return make_error(
-            'You should be authorized to use this endpoint',
-            401)
+        return errors.not_authorized()
 
     blog = Blog.create(
         created_date=datetime.datetime.now(),
@@ -66,14 +64,13 @@ def create_blog():
 def get_single_blog(url):
     blog = Blog.get_or_none(Blog.url == url)
     if blog is None:
-        return make_error('There is no blog with this url', 404)
+        return errors.not_found()
+
     user = get_user_from_request()
     has_access = Blog.has_access(blog, user)
 
     if not has_access:
-        return make_error(
-            'You doesn\'t have rights to do this action',
-            403)
+        return errors.no_access()
 
     blog_dict = model_to_dict(blog, exclude=[User.password])
     blog_dict['readers'] = Blog.get_readers_count(blog)
@@ -87,19 +84,15 @@ def get_single_blog(url):
 def edit_blog(url):
     blog = Blog.get_or_none(Blog.url == url)
     if blog is None:
-        return make_error('There is no blog with this url', 404)
+        return errors.not_found()
 
     user = get_user_from_request()
     if user is None:
-        return make_error(
-            'You should be authorized to use this endpoint',
-            401)
+        return errors.not_authorized()
 
     role = Blog.get_user_role(blog, user)
     if role != 1:
-        return make_error(
-            'You doesn\'t have rights to do this action',
-            403)
+        return errors.no_access()
 
     fill_blog_from_json(blog, request.get_json())
     blog.save()
@@ -115,19 +108,15 @@ def edit_blog(url):
 def delete_blog(url):
     blog = Blog.get_or_none(Blog.url == url)
     if blog is None:
-        return make_error('There is no blog with this url', 404)
+        return errors.not_found()
 
     user = get_user_from_request()
     if user is None:
-        return make_error(
-            'You should be authorized to use this endpoint',
-            401)
+        return errors.not_authorized()
 
     role = Blog.get_user_role(blog, user)
     if role != 1:
-        return make_error(
-            'You doesn\'t have rights to do this action',
-            403)
+        return errors.no_access()
 
     blog.delete_instance()
 
@@ -140,11 +129,11 @@ def delete_blog(url):
 def posts(url):
     blog = Blog.get_or_none(Blog.url == url)
     if blog is None:
-        return make_error('There is no blog with this url', 404)
+        return errors.not_foudn
     user = get_user_from_request()
     has_access = Blog.has_access(blog, user)
     if not has_access:
-        return make_error('You doesn\'t have rights to do this action', 403)
+        return errors.no_access()
 
     posts = []
 
@@ -170,11 +159,11 @@ def posts(url):
 def readers(url):
     blog = Blog.get_or_none(Blog.url == url)
     if blog is None:
-        return make_error('There is no blog with this url', 404)
+        return errors.not_foun
     user = get_user_from_request()
     has_access = Blog.has_access(blog, user)
     if not has_access:
-        return make_error('You doesn\'t have rights to do this action', 403)
+        return errors.no_access()
 
     readers = []
 
@@ -200,7 +189,7 @@ def readers(url):
 def invites(url):
     blog = Blog.get_or_none(Blog.url == url)
     if blog is None:
-        return make_error('There is no blog with this url', 404)
+        return errors.not_found()
 
     user = get_user_from_request()
 
@@ -209,10 +198,10 @@ def invites(url):
     if 'invite' in json:
         invite = BlogInvite.get_or_none(BlogInvite.id == json['invite'])
         if invite is None:
-            return make_error('There is no invite with this id', 404)
+            return errors.invite_not_found()
 
         if invite.user_to.id != user.id:
-            return make_error('You can\'t accept this invite', 403)
+            return errors.no_access()
 
         invite.is_accepted = True
         invite.save()
@@ -226,12 +215,12 @@ def invites(url):
     elif 'user' in json and 'role' in json:
         user_to = User.get_or_none(User.id == json['user'])
         if user_to is None:
-            return make_error('There is no user with this id', 400)
+            return errors.not_found()
 
         role = Blog.get_user_role(blog, user)
 
         if role is None:
-            return make_error('You are not participiate in this blog', 400)
+            return errors.no_access()
 
         role_to = json['role']
         roles = {
@@ -241,12 +230,11 @@ def invites(url):
         }
 
         if role_to not in roles:
-            return make_error('Wrong role specified', 400)
+            return errors.invite_wrong_role()
 
         role_to = roles[role_to]
         if role > role_to:
-            return make_error('You doesn\'t have rights to do this action',
-                              400)
+            return errors.no_access()
 
         invite = BlogInvite.create(blog=blog, user_from=user, user_to=user_to,
                                    role=role_to)
@@ -262,13 +250,13 @@ def invites(url):
 def join(url):
     blog = Blog.get_or_none(Blog.url == url)
     if blog is None:
-        return make_error('There is no blog with this url', 404)
+        return errors.not_found()
     if blog.blog_type != 1:
-        return make_error('You can join with blog only with invite', 403)
+        return errors.no_access()
 
     user = get_user_from_request()
     if user is None:
-        return make_error('You should be authorized to use this endpoint', 401)
+        return errors.not_authorized()
     if BlogParticipiation.get_or_none(blog=blog, user=user) is None:
         BlogParticipiation.create(blog=blog, user=user, role=3)
 

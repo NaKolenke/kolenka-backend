@@ -4,7 +4,7 @@ from playhouse.shortcuts import model_to_dict
 from playhouse.flask_utils import PaginatedQuery
 from src.auth import get_user_from_request
 from src.model.models import User, Post, Blog, Comment
-from src.utils import make_error
+from src import errors
 
 
 class BlogError:
@@ -42,9 +42,7 @@ def get_posts():
 def create_post():
     user = get_user_from_request()
     if user is None:
-        return make_error(
-            'You should be authorized to use this endpoint',
-            401)
+        return errors.not_authorized()
 
     post = Post(
         created_date=datetime.datetime.now(),
@@ -56,11 +54,11 @@ def create_post():
     fill_post_from_json(post, json)
     error = set_blog(post, json, user)
     if error is not None:
-        error_message = {
-            BlogError.NoBlog: 'There is no blog with this ID',
-            BlogError.NoAccess: 'You doesn\'t have rights to do this action'
+        error_response = {
+            BlogError.NoBlog: errors.not_found(),
+            BlogError.NoAccess: errors.no_access()
         }[error]
-        return make_error(error_message)
+        return error_response
 
     post.save()
 
@@ -76,24 +74,20 @@ def create_post():
 def get_post(url):
     post = Post.get_or_none(Post.url == url)
     if post is None:
-        return make_error('There is no post with this url', 404)
+        return errors.not_found()
 
     if post.is_draft:
         user = get_user_from_request()
         if user is None:
-            return make_error(
-                'You doesn\'t have rights to do this action',
-                403)
+            return errors.no_access()
 
         if post.creator != user:
-            return make_error(
-                'You doesn\'t have rights to do this action',
-                403)
+            return errors.no_access()
 
     user = get_user_from_request()
     has_access = Blog.has_access(post.blog, user)
     if not has_access:
-        return make_error('You doesn\'t have rights to do this action', 403)
+        return errors.no_access()
 
     post_dict = prepare_post_to_response(post)
 
@@ -107,29 +101,25 @@ def get_post(url):
 def edit_post(url):
     post = Post.get_or_none(Post.url == url)
     if post is None:
-        return make_error('There is no post with this url', 404)
+        return errors.not_found()
 
     user = get_user_from_request()
     if user is None:
-        return make_error(
-            'You should be authorized to use this endpoint',
-            401)
+        return errors.not_authorized()
 
     role = Blog.get_user_role(post.blog, user)
     if role != 1 or post.creator != user:
-        return make_error(
-            'You doesn\'t have rights to do this action',
-            403)
+        return errors.no_access()
 
     json = request.get_json()
     fill_post_from_json(post, json)
     error = set_blog(post, json, user)
     if error is not None:
-        error_message = {
-            BlogError.NoBlog: 'There is no blog with this ID',
-            BlogError.NoAccess: 'You doesn\'t have rights to do this action'
+        error_response = {
+            BlogError.NoBlog: errors.not_found(),
+            BlogError.NoAccess: errors.no_access()
         }[error]
-        return make_error(error_message)
+        return error_response
 
     post.save()
 
@@ -144,13 +134,11 @@ def edit_post(url):
 def delete_post(url):
     post = Post.get_or_none(Post.url == url)
     if post is None:
-        return make_error('There is no post with this url', 404)
+        return errors.not_found()
 
     user = get_user_from_request()
     if user is None:
-        return make_error(
-            'You should be authorized to use this endpoint',
-            401)
+        return errors.not_authorized()
 
     if post.creator == user:
         post.delete_instance()
@@ -160,15 +148,11 @@ def delete_post(url):
         })
 
     if post.blog is None:
-        return make_error(
-            'You doesn\'t have rights to do this action',
-            403)
+        return errors.no_access()
 
     role = Blog.get_user_role(post.blog, user)
     if role != 1:
-        return make_error(
-            'You doesn\'t have rights to do this action',
-            403)
+        return errors.no_access()
 
     post.delete_instance()
 
@@ -181,19 +165,15 @@ def delete_post(url):
 def comments(url):
     post = Post.get_or_none(Post.url == url)
     if post is None:
-        return make_error('There is no post with this url', 404)
+        return errors.not_found()
     if request.method == 'GET':
         if post.is_draft:
             user = get_user_from_request()
             if user is None:
-                return make_error(
-                    'You doesn\'t have rights to do this action',
-                    403)
+                return errors.no_access()
 
             if post.creator != user:
-                return make_error(
-                    'You doesn\'t have rights to do this action',
-                    403)
+                return errors.no_access()
 
         comments = []
 
@@ -209,18 +189,14 @@ def comments(url):
     elif request.method == 'POST':
         user = get_user_from_request()
         if user is None:
-            return make_error(
-                'You should be authorized to use this endpoint',
-                401)
+            return errors.not_authorized()
 
         json = request.get_json()
 
         if 'text' in json:
             text = json.get('text')
         else:
-            return make_error(
-                'You should fill text field',
-                400)
+            return errors.wrong_payload('text')
 
         parent = None
         level = 0

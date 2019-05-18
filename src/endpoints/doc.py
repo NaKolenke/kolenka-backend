@@ -1,4 +1,7 @@
+import inspect
 from flask import Blueprint, jsonify
+from flask.json import loads
+from src import errors as error_funcs
 
 bp = Blueprint('doc', __name__, url_prefix='/doc/')
 
@@ -61,7 +64,7 @@ def documentation():
                  },
                  error_response={
                      'success': 0,
-                     'error': 'Error message'
+                     'error': 'Error object'
                  }
                  ),
         Endpoint('GET', '/users/login/', 'users',
@@ -167,7 +170,34 @@ def documentation():
 
     ]
 
+    errors = []
+
+    functions = inspect.getmembers(error_funcs, inspect.isfunction)
+    for (name, func) in functions:
+        if name in ['prepare_error', 'jsonify']:
+            # ignore this functions
+            continue
+        sig = inspect.signature(func)
+
+        actual_error = None
+        if len(sig.parameters) > 0:
+            actual_error = func('param')
+        else:
+            actual_error = func()
+
+        response_as_str = actual_error.response[0].decode('utf-8')
+        response_body = loads(response_as_str)
+
+        e = {
+            'response_code': actual_error.status_code,
+            'error': response_body['error']
+        }
+        errors.append(e)
+
+    errors = sorted(errors, key=lambda e: e['body']['code'])
+
     return jsonify({
         'success': 1,
-        'endpoints': [e.__dict__ for e in endpoints]
+        'endpoints': [e.__dict__ for e in endpoints],
+        'errors': errors,
     })

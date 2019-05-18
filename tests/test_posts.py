@@ -107,14 +107,14 @@ def test_post_get_draft_not_auth(client, draft_post):
     rv = client.get('/posts/' + draft_post.url + '/')
     assert rv.json['success'] == 0
     assert 'post' not in rv.json, 'We should have no post'
-    assert rv.json['error'] == 'You doesn\'t have rights to do this action'
+    assert rv.json['error']['code'] == 3
 
 
 def test_post_get_draft_wrong_user(client, draft_post, reader_token):
     rv = client.get('/posts/' + draft_post.url + '/')
     assert rv.json['success'] == 0
     assert 'post' not in rv.json, 'We should have no post'
-    assert rv.json['error'] == 'You doesn\'t have rights to do this action'
+    assert rv.json['error']['code'] == 3
 
 
 def test_post_get_draft(client, draft_post, user_token):
@@ -166,7 +166,7 @@ def test_edit_post_wrong_user(client, post, user_not_in_blog_with_token):
             'Authorization': user_not_in_blog_with_token[1].token
         })
     assert rv.json['success'] == 0
-    assert rv.json['error'] == 'You doesn\'t have rights to do this action'
+    assert rv.json['error']['code'] == 3
 
     assert Post.get().title == post.title, 'Post title changed'
     assert Post.get().title != 'new title'
@@ -183,7 +183,7 @@ def test_edit_post_reader(client, post, reader_token):
         })
 
     assert rv.json['success'] == 0
-    assert rv.json['error'] == 'You doesn\'t have rights to do this action'
+    assert rv.json['error']['code'] == 3
 
     assert Post.get().title == post.title, 'Post title changed'
     assert Post.get().title != 'new title'
@@ -207,7 +207,7 @@ def test_delete_post_wrong_user(client, post, user_not_in_blog_with_token):
             'Authorization': user_not_in_blog_with_token[1].token
         })
     assert rv.json['success'] == 0
-    assert rv.json['error'] == 'You doesn\'t have rights to do this action'
+    assert rv.json['error']['code'] == 3
 
     assert Post.select().count() == 1, 'Post was deleted'
 
@@ -219,7 +219,7 @@ def test_delete_post_reader(client, post, reader_token):
             'Authorization': reader_token[1].token
         })
     assert rv.json['success'] == 0
-    assert rv.json['error'] == 'You doesn\'t have rights to do this action'
+    assert rv.json['error']['code'] == 3
 
     assert Post.select().count() == 1, 'Post was deleted'
 
