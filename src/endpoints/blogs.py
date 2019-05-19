@@ -129,7 +129,7 @@ def delete_blog(url):
 def posts(url):
     blog = Blog.get_or_none(Blog.url == url)
     if blog is None:
-        return errors.not_foudn
+        return errors.not_found()
     user = get_user_from_request()
     has_access = Blog.has_access(blog, user)
     if not has_access:
