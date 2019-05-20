@@ -79,7 +79,9 @@ def user_posts(username):
         return errors.not_found()
 
     posts = []
-    query = Post.get_posts_for_user(user)
+    query = Post.select().where(
+        Post.creator == user
+    ).order_by(Post.created_date.desc())
     paginated_query = PaginatedQuery(query, paginate_by=10)
 
     for p in paginated_query.get_object_list():
@@ -101,7 +103,10 @@ def user_drafts():
     user = get_user_from_request()
     user = User.get(User.id == user.id)
 
-    query = Post.get_drafts_for_user(user)
+    query = Post.select().where(
+        (Post.creator == user) &
+        (Post.is_draft == True)  # noqa E712
+    ).order_by(Post.created_date.desc())
     paginated_query = PaginatedQuery(query, paginate_by=10)
 
     posts = []

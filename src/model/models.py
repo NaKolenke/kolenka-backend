@@ -170,18 +170,6 @@ class Post(db.db_wrapper.Model):
             .select()   \
             .where(Post.blog == blog)
 
-    @classmethod
-    def get_posts_for_user(cls, user):
-        return Post \
-            .select() \
-            .where(Post.creator == user)
-
-    @classmethod
-    def get_drafts_for_user(cls, user):
-        return Post \
-            .select() \
-            .where(Post.creator == user & Post.is_draft == True)
-
 
 class Comment(db.db_wrapper.Model):
     post = ForeignKeyField(model=Post)
