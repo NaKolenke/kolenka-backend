@@ -1,9 +1,8 @@
 import datetime
 from flask import Blueprint, jsonify, request
-from playhouse.shortcuts import model_to_dict
 from playhouse.flask_utils import PaginatedQuery
-from src.auth import get_user_from_request
-from src.model.models import User, Post, Blog, Comment
+from src.auth import get_user_from_request, login_required
+from src.model.models import Post, Blog, Comment
 from src import errors
 
 
@@ -17,21 +16,12 @@ bp = Blueprint('posts', __name__, url_prefix='/posts/')
 
 @bp.route("/", methods=['GET'])
 def get_posts():
-    posts = []
-
-    query = Post.select().join(Blog).where(
-        # (Post.is_on_main) &
-        (Post.is_draft == False) &  # noqa: E712
-        (Blog.blog_type != 3)
-    ).order_by(Post.created_date.desc())
-
+    query = Post.get_public_posts()
     paginated_query = PaginatedQuery(query, paginate_by=20)
-    for p in paginated_query.get_object_list():
-        post_dict = prepare_post_to_response(p)
-        posts.append(post_dict)
+
     return jsonify({
         'success': 1,
-        'posts': posts,
+        'posts': [p.to_json() for p in paginated_query.get_object_list()],
         'meta': {
             'page_count': paginated_query.get_page_count()
         }
@@ -39,10 +29,9 @@ def get_posts():
 
 
 @bp.route("/", methods=['POST'])
+@login_required
 def create_post():
     user = get_user_from_request()
-    if user is None:
-        return errors.not_authorized()
 
     post = Post(
         created_date=datetime.datetime.now(),
@@ -62,11 +51,9 @@ def create_post():
 
     post.save()
 
-    post_dict = prepare_post_to_response(post)
-
     return jsonify({
         'success': 1,
-        'post': post_dict,
+        'post': post.to_json(),
     })
 
 
@@ -89,23 +76,20 @@ def get_post(url):
     if not has_access:
         return errors.no_access()
 
-    post_dict = prepare_post_to_response(post)
-
     return jsonify({
         'success': 1,
-        'post': post_dict,
+        'post': post.to_json(),
     })
 
 
 @bp.route("/<url>/", methods=['PUT'])
+@login_required
 def edit_post(url):
     post = Post.get_or_none(Post.url == url)
     if post is None:
         return errors.not_found()
 
     user = get_user_from_request()
-    if user is None:
-        return errors.not_authorized()
 
     role = Blog.get_user_role(post.blog, user)
     if role != 1 or post.creator != user:
@@ -123,22 +107,20 @@ def edit_post(url):
 
     post.save()
 
-    post_dict = prepare_post_to_response(post)
     return jsonify({
         'success': 1,
-        'post': post_dict
+        'post': post.to_json()
     })
 
 
 @bp.route("/<url>/", methods=['DELETE'])
+@login_required
 def delete_post(url):
     post = Post.get_or_none(Post.url == url)
     if post is None:
         return errors.not_found()
 
     user = get_user_from_request()
-    if user is None:
-        return errors.not_authorized()
 
     if post.creator == user:
         post.delete_instance()
@@ -166,6 +148,7 @@ def comments(url):
     post = Post.get_or_none(Post.url == url)
     if post is None:
         return errors.not_found()
+
     if request.method == 'GET':
         if post.is_draft:
             user = get_user_from_request()
@@ -175,16 +158,11 @@ def comments(url):
             if post.creator != user:
                 return errors.no_access()
 
-        comments = []
+        query = Comment.get_comments_for_post(post)
 
-        for c in Comment.select().where(Comment.post == post):
-            comment_dict = model_to_dict(
-                c,
-                exclude=[User.password, Comment.post])
-            comments.append(comment_dict)
         return jsonify({
             'success': 1,
-            'comments': comments,
+            'comments': [c.to_json() for c in query],
         })
     elif request.method == 'POST':
         user = get_user_from_request()
@@ -215,20 +193,10 @@ def comments(url):
             level=level
         )
 
-        comment_dict = model_to_dict(
-                comment,
-                exclude=[User.password, Comment.post])
-
         return jsonify({
             'success': 1,
-            'comment': comment_dict,
+            'comment': comment.to_json(),
         })
-
-
-def prepare_post_to_response(post):
-    post_dict = model_to_dict(post, exclude=[User.password])
-    post_dict['comments'] = Comment.get_comments_count_for_post(post)
-    return post_dict
 
 
 def fill_post_from_json(post, json):

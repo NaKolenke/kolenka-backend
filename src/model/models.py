@@ -7,9 +7,16 @@ from peewee import \
     ForeignKeyField, \
     DateTimeField, \
     DateField, \
-    BooleanField
+    BooleanField, \
+    fn, \
+    JOIN
+from playhouse.shortcuts import model_to_dict
 
 from src.model import db
+
+
+def get_exclude():
+    return [User.password, User.email, Content.user]
 
 
 class DatabaseInfo(db.db_wrapper.Model):
@@ -19,6 +26,10 @@ class DatabaseInfo(db.db_wrapper.Model):
 class Content(db.db_wrapper.Model):
     user = IntegerField()
     path = CharField()
+
+    def to_json(self):
+        content_dict = model_to_dict(self, exclude=get_exclude())
+        return content_dict
 
 
 class User(db.db_wrapper.Model):
@@ -33,6 +44,20 @@ class User(db.db_wrapper.Model):
     is_admin = BooleanField(default=False)
 
     avatar = ForeignKeyField(model=Content, backref='avatar', null=True)
+
+    def to_json(self):
+        user_dict = model_to_dict(self, exclude=get_exclude())
+        return user_dict
+
+    def to_json_with_email(self):
+        new_exclude = [
+            item
+            for item in get_exclude()
+            if item not in [User.email]
+        ]
+
+        user_dict = model_to_dict(self, exclude=new_exclude)
+        return user_dict
 
 
 class Token(db.db_wrapper.Model):
@@ -61,6 +86,10 @@ class Feedback(db.db_wrapper.Model):
     text = TextField()
     is_resolved = BooleanField(default=False)
 
+    def to_json(self):
+        feedback_dict = model_to_dict(self, exclude=get_exclude())
+        return feedback_dict
+
 
 class Blog(db.db_wrapper.Model):
     image = ForeignKeyField(model=Content, backref='blogs', null=True)
@@ -81,33 +110,38 @@ class Blog(db.db_wrapper.Model):
     creator = ForeignKeyField(model=User, backref='blogs')
 
     @classmethod
+    def get_public_blogs(cls):
+        readers = fn.COUNT(BlogParticipiation.id)
+        return cls.select(Blog, readers.alias('readers')) \
+            .join(BlogParticipiation, JOIN.LEFT_OUTER).where(
+                Blog.blog_type != 3
+            ).group_by(Blog.id).order_by(readers.desc())
+
+    @classmethod
     def get_readers_count(cls, blog):
         return cls.get_readers(blog).count()
 
     @classmethod
     def get_readers(cls, blog):
-        return User \
-            .select()   \
-            .join(BlogParticipiation)   \
-            .where(BlogParticipiation.blog == blog)
+        return User.select().join(BlogParticipiation).where(
+            BlogParticipiation.blog == blog
+        )
 
     @classmethod
     def get_blogs_for_user(cls, user):
-        return Blog \
-            .select()   \
-            .join(BlogParticipiation)   \
-            .where(
+        readers = fn.COUNT(BlogParticipiation.id)
+        return cls.select(Blog, readers.alias('readers')) \
+            .join(BlogParticipiation, JOIN.LEFT_OUTER).where(
                 (BlogParticipiation.user == user) &
                 (Blog.blog_type != 3)
-                )
+            ).group_by(Blog.id).order_by(readers.desc())
 
     @classmethod
     def get_user_role(cls, blog, user):
-        query = BlogParticipiation \
-            .select()   \
-            .where(
-                (BlogParticipiation.user == user)
-                & (BlogParticipiation.blog == blog))
+        query = BlogParticipiation.select().where(
+                (BlogParticipiation.user == user) &
+                (BlogParticipiation.blog == blog)
+            )
 
         if query.count() == 0:
             return None
@@ -124,6 +158,11 @@ class Blog(db.db_wrapper.Model):
             if role is None:
                 return False
         return True
+
+    def to_json(self):
+        blog_dict = model_to_dict(self, exclude=get_exclude())
+        blog_dict['readers'] = Blog.get_readers_count(self)
+        return blog_dict
 
 
 class BlogParticipiation(db.db_wrapper.Model):
@@ -165,10 +204,46 @@ class Post(db.db_wrapper.Model):
     cut_name = CharField(default=None, null=True)
 
     @classmethod
+    def get_public_posts(cls):
+        return cls.select().join(Blog).where(
+            # (Post.is_on_main) &
+            (Post.is_draft == False) &  # noqa: E712
+            (Blog.blog_type != 3)
+        ).order_by(Post.created_date.desc())
+
+    @classmethod
     def get_posts_for_blog(cls, blog):
-        return Post \
-            .select()   \
-            .where(Post.blog == blog)
+        return cls.select().where(
+            (Post.is_draft == False) &  # noqa: E712
+            (Post.blog == blog)
+        ).order_by(Post.created_date.desc())
+
+    @classmethod
+    def get_user_posts(cls, user):
+        return cls.select().where(
+            (Post.is_draft == False) &  # noqa: E712
+            (Post.creator == user)
+        ).order_by(Post.created_date.desc())
+
+    @classmethod
+    def get_user_drafts(cls, user):
+        return cls.select().where(
+            (Post.is_draft == True) &  # noqa: E712
+            (Post.creator == user)
+        ).order_by(Post.created_date.desc())
+
+    @classmethod
+    def get_public_posts_with_tag(cls, tag):
+        return cls.select().join(TagMark).switch(Post).join(Blog).where(
+            (Post.is_draft == False) &  # noqa: E712
+            (TagMark.tag == tag) &
+            (Blog.blog_type != 3)
+        ).order_by(Post.created_date.desc())
+
+    def to_json(self):
+        post_dict = model_to_dict(self, exclude=get_exclude())
+        post_dict['comments'] = Comment.get_comments_count_for_post(self)
+        return post_dict
 
 
 class Comment(db.db_wrapper.Model):
@@ -182,16 +257,40 @@ class Comment(db.db_wrapper.Model):
     rating = IntegerField(default=0)
 
     @classmethod
+    def get_comments_for_post(cls, post):
+        return cls.select().where(
+            Comment.post == post
+        ).order_by(Comment.created_date.desc())
+
+    @classmethod
     def get_comments_count_for_post(cls, post):
-        return Comment \
-            .select() \
-            .where(Comment.post == post) \
-            .count()
+        return cls.get_comments_for_post(post).count()
+
+    def to_json(self):
+        comment_dict = model_to_dict(
+            self,
+            exclude=get_exclude() + [Comment.post])
+        return comment_dict
 
 
 class Tag(db.db_wrapper.Model):
     title = TextField()
     created_date = DateTimeField()
+
+    @classmethod
+    def get_tags(cls):
+        ntags = fn.COUNT(TagMark.id)
+        return (cls
+                .select(Tag, ntags.alias('count'))
+                .join(TagMark, JOIN.LEFT_OUTER)
+                .group_by(Tag.id)
+                .order_by(ntags.desc()))
+
+    def to_json(self):
+        tag_dict = model_to_dict(self, exclude=get_exclude())
+        if hasattr(self, 'count'):
+            tag_dict['count'] = self.count
+        return tag_dict
 
 
 class TagMark(db.db_wrapper.Model):

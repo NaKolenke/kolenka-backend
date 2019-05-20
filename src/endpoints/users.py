@@ -1,34 +1,23 @@
 import datetime
 import hashlib
 from flask import current_app, Blueprint, request, jsonify
-from playhouse.shortcuts import model_to_dict
 from playhouse.flask_utils import PaginatedQuery
 from src.auth import login_required, get_user_from_request
 from src.model.models import User, Token, Content, Blog, Post
-from src.endpoints import posts as posts_endpoint
 from src import errors
 
 
 bp = Blueprint('users', __name__, url_prefix='/users/')
 
 
-public_exclude = [User.password, User.email]
-
-
 @bp.route("/")
 def users():
-    users = []
     query = User.select()
     paginated_query = PaginatedQuery(query, paginate_by=20)
 
-    for u in paginated_query.get_object_list():
-        users.append(model_to_dict(
-            u, exclude=public_exclude + [User.birthday, User.about]
-        ))
-
     return jsonify({
         'success': 1,
-        'users': users,
+        'users': [u.to_json() for u in paginated_query.get_object_list()],
         'meta': {
             'page_count': paginated_query.get_page_count()
         }
@@ -44,7 +33,7 @@ def user(username):
 
     return jsonify({
         'success': 1,
-        'user': model_to_dict(user, exclude=public_exclude),
+        'user': user.to_json(),
     })
 
 
@@ -55,16 +44,12 @@ def user_blogs(username):
     if user is None:
         return errors.not_found()
 
-    blogs = []
     query = Blog.get_blogs_for_user(user)
     paginated_query = PaginatedQuery(query, paginate_by=20)
 
-    for b in paginated_query.get_object_list():
-        blogs.append(model_to_dict(b, exclude=public_exclude))
-
     return jsonify({
         'success': 1,
-        'blogs': blogs,
+        'blogs': [b.to_json() for b in paginated_query.get_object_list()],
         'meta': {
             'page_count': paginated_query.get_page_count()
         }
@@ -78,19 +63,12 @@ def user_posts(username):
     if user is None:
         return errors.not_found()
 
-    posts = []
-    query = Post.select().where(
-        Post.creator == user
-    ).order_by(Post.created_date.desc())
+    query = Post.get_user_posts(user)
     paginated_query = PaginatedQuery(query, paginate_by=10)
-
-    for p in paginated_query.get_object_list():
-        post_dict = posts_endpoint.prepare_post_to_response(p)
-        posts.append(post_dict)
 
     return jsonify({
         'success': 1,
-        'posts': posts,
+        'posts': [p.to_json() for p in paginated_query.get_object_list()],
         'meta': {
             'page_count': paginated_query.get_page_count()
         }
@@ -101,23 +79,13 @@ def user_posts(username):
 @login_required
 def user_drafts():
     user = get_user_from_request()
-    user = User.get(User.id == user.id)
 
-    query = Post.select().where(
-        (Post.creator == user) &
-        (Post.is_draft == True)  # noqa E712
-    ).order_by(Post.created_date.desc())
+    query = Post.get_user_drafts(user)
     paginated_query = PaginatedQuery(query, paginate_by=10)
-
-    posts = []
-
-    for p in paginated_query.get_object_list():
-        post_dict = posts_endpoint.prepare_post_to_response(p)
-        posts.append(post_dict)
 
     return jsonify({
         'success': 1,
-        'posts': posts,
+        'posts': [p.to_json() for p in paginated_query.get_object_list()],
         'meta': {
             'page_count': paginated_query.get_page_count()
         }
@@ -146,7 +114,7 @@ def current_user():
 
     return jsonify({
         'success': 1,
-        'user': model_to_dict(user, exclude=[User.password])
+        'user': user.to_json_with_email()
     })
 
 

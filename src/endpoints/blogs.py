@@ -1,9 +1,7 @@
 import datetime
 from flask import Blueprint, jsonify, request
-from playhouse.shortcuts import model_to_dict
 from playhouse.flask_utils import PaginatedQuery
 from src.auth import login_required, get_user_from_request
-from src.endpoints import posts as posts_endpoint
 from src.model.models import User, Blog, BlogParticipiation, Content, \
     BlogInvite, Post
 from src import errors
@@ -14,18 +12,12 @@ bp = Blueprint('blogs', __name__, url_prefix='/blogs/')
 
 @bp.route("/", methods=['GET'])
 def get_blogs():
-    blogs = []
-    query = Blog.select().where(Blog.blog_type != 3)
+    query = Blog.get_public_blogs()
     paginated_query = PaginatedQuery(query, paginate_by=20)
-
-    for b in paginated_query.get_object_list():
-        blog_dict = model_to_dict(b, exclude=[User.password])
-        blog_dict['readers'] = Blog.get_readers_count(b)
-        blogs.append(blog_dict)
 
     return jsonify({
         'success': 1,
-        'blogs': blogs,
+        'blogs': [b.to_json() for b in paginated_query.get_object_list()],
         'meta': {
             'page_count': paginated_query.get_page_count()
         }
@@ -33,10 +25,9 @@ def get_blogs():
 
 
 @bp.route("/", methods=['POST'])
+@login_required
 def create_blog():
     user = get_user_from_request()
-    if user is None:
-        return errors.not_authorized()
 
     blog = Blog.create(
         created_date=datetime.datetime.now(),
@@ -52,11 +43,9 @@ def create_blog():
     fill_blog_from_json(blog, request.get_json())
     blog.save()
 
-    blog_dict = model_to_dict(blog, exclude=[User.password])
-
     return jsonify({
         'success': 1,
-        'blog': blog_dict,
+        'blog': blog.to_json(),
     })
 
 
@@ -72,23 +61,20 @@ def get_single_blog(url):
     if not has_access:
         return errors.no_access()
 
-    blog_dict = model_to_dict(blog, exclude=[User.password])
-    blog_dict['readers'] = Blog.get_readers_count(blog)
     return jsonify({
         'success': 1,
-        'blog': blog_dict,
+        'blog': blog.to_json(),
     })
 
 
 @bp.route("/<url>/", methods=['PUT'])
+@login_required
 def edit_blog(url):
     blog = Blog.get_or_none(Blog.url == url)
     if blog is None:
         return errors.not_found()
 
     user = get_user_from_request()
-    if user is None:
-        return errors.not_authorized()
 
     role = Blog.get_user_role(blog, user)
     if role != 1:
@@ -97,22 +83,20 @@ def edit_blog(url):
     fill_blog_from_json(blog, request.get_json())
     blog.save()
 
-    blog_dict = model_to_dict(blog, exclude=[User.password])
     return jsonify({
         'success': 1,
-        'blog': blog_dict
+        'blog': blog.to_json()
     })
 
 
 @bp.route("/<url>/", methods=['DELETE'])
+@login_required
 def delete_blog(url):
     blog = Blog.get_or_none(Blog.url == url)
     if blog is None:
         return errors.not_found()
 
     user = get_user_from_request()
-    if user is None:
-        return errors.not_authorized()
 
     role = Blog.get_user_role(blog, user)
     if role != 1:
@@ -130,25 +114,18 @@ def posts(url):
     blog = Blog.get_or_none(Blog.url == url)
     if blog is None:
         return errors.not_found()
+
     user = get_user_from_request()
     has_access = Blog.has_access(blog, user)
     if not has_access:
         return errors.no_access()
 
-    posts = []
-
-    query = Post.select().where(
-        (Post.is_draft == False) &  # noqa: E712
-        (Post.blog == blog)
-    ).order_by(Post.created_date.desc())
-
+    query = Post.get_posts_for_blog(blog)
     paginated_query = PaginatedQuery(query, paginate_by=20)
-    for p in paginated_query.get_object_list():
-        post_dict = posts_endpoint.prepare_post_to_response(p)
-        posts.append(post_dict)
+
     return jsonify({
         'success': 1,
-        'posts': posts,
+        'posts': [p.to_json() for p in paginated_query.get_object_list()],
         'meta': {
             'page_count': paginated_query.get_page_count()
         }
@@ -165,19 +142,12 @@ def readers(url):
     if not has_access:
         return errors.no_access()
 
-    readers = []
-
     query = Blog.get_readers(blog)
     paginated_query = PaginatedQuery(query, paginate_by=20)
-    for u in paginated_query.get_object_list():
-        readers.append(
-            model_to_dict(
-                u,
-                exclude=[User.password, User.birthday, User.about]))
 
     return jsonify({
         'success': 1,
-        'readers': readers,
+        'readers': [u.to_json() for u in paginated_query.get_object_list()],
         'meta': {
             'page_count': paginated_query.get_page_count()
         }
@@ -261,8 +231,8 @@ def join(url):
         BlogParticipiation.create(blog=blog, user=user, role=3)
 
     return jsonify({
-            'success': 1
-        })
+        'success': 1
+    })
 
 
 def fill_blog_from_json(blog, json):

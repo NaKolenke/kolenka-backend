@@ -3,7 +3,6 @@ import ntpath
 import hashlib
 import datetime
 from flask import Blueprint, jsonify, request, current_app, send_file
-from playhouse.shortcuts import model_to_dict
 from src.auth import login_required, get_user_from_request
 from src.model.models import Content
 from src import errors
@@ -55,7 +54,7 @@ def upload():
 
         return jsonify({
             'success': 1,
-            'file': model_to_dict(content, exclude=[Content.user])
+            'file': content.to_json()
         })
 
 

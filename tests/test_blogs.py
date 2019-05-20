@@ -45,10 +45,12 @@ def user_not_in_blog_with_token():
 @pytest.fixture
 def blogs(user):
     for i in range(30):
-        Blog.create(title='test_blog' + str(i), url='test_blog' + str(i),
-                    creator=user,
-                    created_date=datetime.datetime.now(),
-                    updated_date=datetime.datetime.now())
+        blog = Blog.create(
+            title='test_blog' + str(i),
+            url='test_blog' + str(i),
+            creator=user,
+            created_date=datetime.datetime.now(),
+            updated_date=datetime.datetime.now())
 
     from src.model import db
     db.db_wrapper.database.close()

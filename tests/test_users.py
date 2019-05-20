@@ -154,6 +154,15 @@ def test_user_edit_avatar(client, user_token, avatar):
     assert rv.json['user']['avatar']['id'] == avatar.id, 'Avatar not changed'
 
 
+def test_user_get_self(client, user_token):
+    rv = client.get('/users/self/', headers={
+        'Authorization': user_token[1].token
+    })
+    assert rv.json['success'] == 1
+    assert rv.json['user']['name'] == user_token[0].name
+    assert 'email' in rv.json['user']
+
+
 def test_registration(client):
     rv = client.post('/users/register/', json={
         'username': 'test_user',

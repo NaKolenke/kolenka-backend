@@ -42,8 +42,9 @@ def test_tags(client, tag):
 def test_tags_no_post(client, tag_no_post):
     rv = client.get('/tags/')
     assert rv.json['success'] == 1
-    assert len(rv.json['tags']) == 0, 'We should have no tags'
-    assert rv.json['meta']['page_count'] == 0, 'There should be no pages'
+    assert len(rv.json['tags']) == 1, 'We should have only one tag'
+    assert rv.json['tags'][0]['title'] == tag_no_post.title, 'Wrong title'
+    assert rv.json['meta']['page_count'] == 1, 'There should be one page'
 
 
 def test_no_tags(client):

@@ -1,5 +1,4 @@
 from flask import Blueprint, jsonify, request, current_app
-from playhouse.shortcuts import model_to_dict
 from src.model.models import Feedback
 from src.telegram import Telegram
 from src.auth import login_required, get_user_from_request
@@ -31,13 +30,9 @@ def leave_feedback():
 def get_feedback():
     user = get_user_from_request()
     if user.is_admin:
-        feedback = []
-        for f in Feedback.select():
-            feedback.append(model_to_dict(f))
-
         return jsonify({
             'success': 1,
-            'feedback': feedback
+            'feedback': [f.to_json() for f in Feedback.select()]
         })
     else:
         return errors.no_access()
