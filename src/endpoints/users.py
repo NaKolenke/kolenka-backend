@@ -13,7 +13,8 @@ bp = Blueprint('users', __name__, url_prefix='/users/')
 @bp.route("/")
 def users():
     query = User.select()
-    paginated_query = PaginatedQuery(query, paginate_by=20)
+    limit = max(1, min(int(request.args.get('limit')) or 20, 100))
+    paginated_query = PaginatedQuery(query, paginate_by=limit)
 
     return jsonify({
         'success': 1,
@@ -45,7 +46,8 @@ def user_blogs(username):
         return errors.not_found()
 
     query = Blog.get_blogs_for_user(user)
-    paginated_query = PaginatedQuery(query, paginate_by=20)
+    limit = max(1, min(int(request.args.get('limit')) or 20, 100))
+    paginated_query = PaginatedQuery(query, paginate_by=limit)
 
     return jsonify({
         'success': 1,
@@ -64,7 +66,8 @@ def user_posts(username):
         return errors.not_found()
 
     query = Post.get_user_posts(user)
-    paginated_query = PaginatedQuery(query, paginate_by=10)
+    limit = max(1, min(int(request.args.get('limit')) or 20, 100))
+    paginated_query = PaginatedQuery(query, paginate_by=limit)
 
     return jsonify({
         'success': 1,
@@ -81,7 +84,8 @@ def user_drafts():
     user = get_user_from_request()
 
     query = Post.get_user_drafts(user)
-    paginated_query = PaginatedQuery(query, paginate_by=10)
+    limit = max(1, min(int(request.args.get('limit')) or 20, 100))
+    paginated_query = PaginatedQuery(query, paginate_by=limit)
 
     return jsonify({
         'success': 1,
