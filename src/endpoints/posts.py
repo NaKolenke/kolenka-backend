@@ -17,7 +17,7 @@ bp = Blueprint('posts', __name__, url_prefix='/posts/')
 @bp.route("/", methods=['GET'])
 def get_posts():
     query = Post.get_public_posts()
-    limit = max(1, min(int(request.args.get('limit')) or 20, 100))
+    limit = max(1, min(int(request.args.get('limit') or 20), 100))
     paginated_query = PaginatedQuery(query, paginate_by=limit)
 
     return jsonify({

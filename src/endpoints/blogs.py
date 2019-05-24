@@ -13,7 +13,7 @@ bp = Blueprint('blogs', __name__, url_prefix='/blogs/')
 @bp.route("/", methods=['GET'])
 def get_blogs():
     query = Blog.get_public_blogs()
-    limit = max(1, min(int(request.args.get('limit')) or 20, 100))
+    limit = max(1, min(int(request.args.get('limit') or 20), 100))
     paginated_query = PaginatedQuery(query, paginate_by = limit)
 
     return jsonify({
@@ -122,7 +122,7 @@ def posts(url):
         return errors.no_access()
 
     query = Post.get_posts_for_blog(blog)
-    limit = max(1, min(int(request.args.get('limit')) or 20, 100))
+    limit = max(1, min(int(request.args.get('limit') or 20), 100))
     paginated_query = PaginatedQuery(query, paginate_by=limit)
 
     return jsonify({
@@ -145,7 +145,7 @@ def readers(url):
         return errors.no_access()
 
     query = Blog.get_readers(blog)
-    limit = max(1, min(int(request.args.get('limit')) or 20, 100))
+    limit = max(1, min(int(request.args.get('limit') or 20), 100))
     paginated_query = PaginatedQuery(query, paginate_by=limit)
 
     return jsonify({

@@ -10,7 +10,7 @@ bp = Blueprint('tags', __name__, url_prefix='/tags/')
 @bp.route("/", methods=['GET'])
 def tags():
     query = Tag.get_tags()
-    limit = max(1, min(int(request.args.get('limit')) or 20, 100))
+    limit = max(1, min(int(request.args.get('limit') or 20), 100))
     paginated_query = PaginatedQuery(query, paginate_by=limit)
 
     return jsonify({
@@ -29,7 +29,7 @@ def tag(title):
         return errors.not_found()
 
     query = Post.get_public_posts_with_tag(tag)
-    limit = max(1, min(int(request.args.get('limit')) or 20, 100))
+    limit = max(1, min(int(request.args.get('limit') or 20), 100))
     paginated_query = PaginatedQuery(query, paginate_by=limit)
 
     return jsonify({
