@@ -93,25 +93,26 @@ def edit_post(url):
     user = get_user_from_request()
 
     role = Blog.get_user_role(post.blog, user)
-    if post.creator != user or role != 1:
+
+    if post.creator == user or role == 1:
+        json = request.get_json()
+        fill_post_from_json(post, json)
+        error = set_blog(post, json, user)
+        if error is not None:
+            error_response = {
+                BlogError.NoBlog: errors.blog_not_found(),
+                BlogError.NoAccess: errors.blog_no_access()
+            }[error]
+            return error_response
+
+        post.save()
+
+        return jsonify({
+            'success': 1,
+            'post': post.to_json()
+        })
+    else:
         return errors.no_access()
-
-    json = request.get_json()
-    fill_post_from_json(post, json)
-    error = set_blog(post, json, user)
-    if error is not None:
-        error_response = {
-            BlogError.NoBlog: errors.blog_not_found(),
-            BlogError.NoAccess: errors.blog_no_access()
-        }[error]
-        return error_response
-
-    post.save()
-
-    return jsonify({
-        'success': 1,
-        'post': post.to_json()
-    })
 
 
 @bp.route("/<url>/", methods=['DELETE'])
