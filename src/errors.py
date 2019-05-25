@@ -37,3 +37,6 @@ def invite_not_found(): return prepare_error(20, 'Invite not found', 404)
 def invite_wrong_role(): return prepare_error(21, 'Wrong role specified', 400)
 
 def content_no_file(): return prepare_error(30, 'No "file"', 400)
+
+def blog_no_access(): return prepare_error(40, 'No access to blog', 400)
+def blog_not_found(): return prepare_error(41, 'Blog not found', 400)

@@ -45,8 +45,8 @@ def create_post():
     error = set_blog(post, json, user)
     if error is not None:
         error_response = {
-            BlogError.NoBlog: errors.not_found(),
-            BlogError.NoAccess: errors.no_access()
+            BlogError.NoBlog: errors.blog_not_found(),
+            BlogError.NoAccess: errors.blog_no_access()
         }[error]
         return error_response
 
@@ -101,8 +101,8 @@ def edit_post(url):
     error = set_blog(post, json, user)
     if error is not None:
         error_response = {
-            BlogError.NoBlog: errors.not_found(),
-            BlogError.NoAccess: errors.no_access()
+            BlogError.NoBlog: errors.blog_not_found(),
+            BlogError.NoAccess: errors.blog_no_access()
         }[error]
         return error_response
 
