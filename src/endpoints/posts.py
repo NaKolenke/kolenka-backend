@@ -93,7 +93,7 @@ def edit_post(url):
     user = get_user_from_request()
 
     role = Blog.get_user_role(post.blog, user)
-    if role != 1 or post.creator != user:
+    if post.creator != user or role != 1:
         return errors.no_access()
 
     json = request.get_json()
