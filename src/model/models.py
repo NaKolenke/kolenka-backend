@@ -317,3 +317,34 @@ class Message(db.db_wrapper.Model):
     created_date = DateTimeField()
     updated_date = DateTimeField()
     text = TextField()
+
+
+class Notification(db.db_wrapper.Model):
+    user = ForeignKeyField(model=User)
+    text = TextField()
+    object_type = TextField(default='')
+    object_id = IntegerField(default=0)
+    created_date = DateTimeField()
+    is_new = BooleanField(default=True)
+
+    @classmethod
+    def get_user_notifications(cls, user):
+        return cls.select().where(
+            (Notification.user == user)
+        ).order_by(Notification.created_date.desc())
+
+    @classmethod
+    def mark_notification_as_readed(cls, user, notification_id):
+        notification = cls.get_or_none(
+            (Notification.user == user) &
+            (Notification.id == notification_id)
+        )
+        if notification is not None:
+            notification.is_new = False
+            notification.save()
+
+    def to_json(self):
+        not_dict = model_to_dict(
+            self,
+            exclude=get_exclude() + [Notification.user])
+        return not_dict
