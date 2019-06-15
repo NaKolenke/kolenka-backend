@@ -8,6 +8,7 @@ bp = Blueprint('tokens', __name__, url_prefix='/token/')
 
 @bp.route("/validate/", methods=['POST'])
 def valid():
+    '''Проверить, валиден ли токен'''
     json = request.get_json()
 
     if 'token' not in json:
@@ -32,6 +33,7 @@ def valid():
 
 @bp.route("/refresh/", methods=['POST'])
 def refresh():
+    '''Обновить токен'''
     json = request.get_json()
 
     if 'token' not in json:

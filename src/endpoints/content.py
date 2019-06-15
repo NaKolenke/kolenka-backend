@@ -21,6 +21,7 @@ def allowed_file(filename):
 @bp.route('/', methods=['POST'])
 @login_required
 def upload():
+    '''Загрузить файл'''
     if 'file' not in request.files:
         return errors.content_no_file()
 
@@ -60,6 +61,7 @@ def upload():
 
 @bp.route('/<id>/', methods=['GET'])
 def get(id):
+    '''Получить файл по id'''
     content = Content.get_or_none(Content.id == id)
     if content is not None:
         return send_file(content.path)

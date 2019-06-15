@@ -13,6 +13,7 @@ bp = Blueprint('users', __name__, url_prefix='/users/')
 
 @bp.route("/")
 def users():
+    '''Получить список пользователей'''
     query = User.select()
     limit = max(1, min(int(request.args.get('limit') or 20), 100))
     paginated_query = PaginatedQuery(query, paginate_by=limit)
@@ -28,6 +29,7 @@ def users():
 
 @bp.route("/<username>/")
 def user(username):
+    '''Получить подробную информацию о пользователе'''
     user = User.get_or_none(User.username == username)
 
     if user is None:
@@ -41,6 +43,7 @@ def user(username):
 
 @bp.route("/<username>/blogs/")
 def user_blogs(username):
+    '''Получить список блогов пользователя'''
     user = User.get_or_none(User.username == username)
 
     if user is None:
@@ -61,6 +64,7 @@ def user_blogs(username):
 
 @bp.route("/<username>/posts/")
 def user_posts(username):
+    '''Получить список постов пользователя'''
     user = User.get_or_none(User.username == username)
 
     if user is None:
@@ -82,6 +86,7 @@ def user_posts(username):
 @bp.route("/drafts/")
 @login_required
 def user_drafts():
+    '''Получить список черновиков'''
     user = get_user_from_request()
 
     query = Post.get_user_drafts(user)
@@ -100,6 +105,7 @@ def user_drafts():
 @bp.route("/self/", methods=['GET', 'POST'])
 @login_required
 def current_user():
+    '''Получить текущего пользователя или отредактировать профиль'''
     user = get_user_from_request()
 
     if request.method == 'POST':
@@ -125,6 +131,7 @@ def current_user():
 
 @bp.route("/register/", methods=['POST'])
 def register():
+    '''Регистрация'''
     json = request.get_json()
 
     missed_payload = []
@@ -179,6 +186,7 @@ def register():
 
 @bp.route("/login/", methods=['POST'])
 def login():
+    '''Авторизация'''
     json = request.get_json()
 
     has_login = ('username' in json or 'email' in json)

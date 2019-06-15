@@ -5,7 +5,7 @@ from src.auth import login_required, get_user_from_request
 from src.model.models import User, Blog, BlogParticipiation, Content, \
     BlogInvite, Post
 from src import errors
-from src.utils import sanitize
+from src.utils import sanitize, doc_sample
 
 
 bp = Blueprint('blogs', __name__, url_prefix='/blogs/')
@@ -13,6 +13,7 @@ bp = Blueprint('blogs', __name__, url_prefix='/blogs/')
 
 @bp.route("/", methods=['GET'])
 def get_blogs():
+    '''Получить список публичных блогов'''
     query = Blog.get_public_blogs()
     limit = max(1, min(int(request.args.get('limit') or 20), 100))
     paginated_query = PaginatedQuery(query, paginate_by=limit)
@@ -28,7 +29,15 @@ def get_blogs():
 
 @bp.route("/", methods=['POST'])
 @login_required
+@doc_sample(body={
+    'title': 'some title',
+    'description': 'some description',
+    'url': 'url',
+    'blog_type': 'int, 1 - for open, 2 - private',
+    'image': 'content id'
+})
 def create_blog():
+    '''Создать блог'''
     user = get_user_from_request()
 
     blog = Blog.create(
@@ -53,6 +62,7 @@ def create_blog():
 
 @bp.route("/<url>/", methods=['GET'])
 def get_single_blog(url):
+    '''Получить блог по указанному url'''
     blog = Blog.get_or_none(Blog.url == url)
     if blog is None:
         return errors.not_found()
@@ -72,6 +82,7 @@ def get_single_blog(url):
 @bp.route("/<url>/", methods=['PUT'])
 @login_required
 def edit_blog(url):
+    '''Изменить блог'''
     blog = Blog.get_or_none(Blog.url == url)
     if blog is None:
         return errors.not_found()
@@ -94,6 +105,7 @@ def edit_blog(url):
 @bp.route("/<url>/", methods=['DELETE'])
 @login_required
 def delete_blog(url):
+    '''Удалить блог'''
     blog = Blog.get_or_none(Blog.url == url)
     if blog is None:
         return errors.not_found()
@@ -113,6 +125,7 @@ def delete_blog(url):
 
 @bp.route("/<url>/posts/")
 def posts(url):
+    '''Получить список постов для блога'''
     blog = Blog.get_or_none(Blog.url == url)
     if blog is None:
         return errors.not_found()
@@ -137,6 +150,7 @@ def posts(url):
 
 @bp.route("/<url>/readers/")
 def readers(url):
+    '''Получить список читателей блога'''
     blog = Blog.get_or_none(Blog.url == url)
     if blog is None:
         return errors.not_foun
@@ -161,6 +175,7 @@ def readers(url):
 @bp.route("/<url>/invite/", methods=['POST'])
 @login_required
 def invites(url):
+    '''Пригласить пользователя или принять инвайт'''
     blog = Blog.get_or_none(Blog.url == url)
     if blog is None:
         return errors.not_found()
@@ -222,6 +237,7 @@ def invites(url):
 @bp.route("/<url>/join/", methods=['GET', 'POST'])
 @login_required
 def join(url):
+    '''Присоеденится к блогу. Работает только с открытми блогами'''
     blog = Blog.get_or_none(Blog.url == url)
     if blog is None:
         return errors.not_found()

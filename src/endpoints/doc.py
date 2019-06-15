@@ -1,5 +1,5 @@
 import inspect
-from flask import Blueprint, jsonify
+from flask import Blueprint, jsonify, current_app
 from flask.json import loads
 from src import errors as error_funcs
 
@@ -21,154 +21,41 @@ class Endpoint:
 
 @bp.route("/", methods=['GET'])
 def documentation():
-    endpoints = [
-        Endpoint('GET', '/doc/', 'doc', 'Текущая документация.'),
+    '''Текущая документация'''
+    endpoints = []
+    for rule in current_app.url_map.iter_rules():
+        # exclude HEAD and OPTIONS from list
+        methods = [item for item in rule.methods
+                   if item not in ['HEAD', 'OPTIONS']]
+        method = str(methods)
+        if len(methods) == 1:
+            method = methods[0]
 
-        Endpoint('GET', '/users/', 'users',
-                 'Получение списка пользователей. ' +
-                 'Возможные параметры запроса: page - выбранная страница.'),
-        Endpoint('GET', '/users/<id>/', 'users',
-                 'Получение конкретного пользователя.'),
-        Endpoint('GET', '/users/self/', 'users',
-                 'Получение текущего пользователя. Необходима авторизация.'),
-        Endpoint('POST', '/users/self/', 'users',
-                 'Изменение текущего пользователя. Необходима авторизация. ' +
-                 'Username изменить нельзя',
-                 body={
-                     'password': 'some_pass',
-                     'email': 'aaa@Aaa',
-                     'name': 'some name',
-                     'about': 'some text',
-                     'birthday': 1540368218,
-                     'avatar': 32
-                 }),
+        url = rule.rule
+        section = rule.endpoint[:rule.endpoint.find('.')]
 
-        Endpoint('GET', '/users/register/', 'users',
-                 'Регистрация пользователя',
-                 body={
-                     'username': 'test_user',
-                     'password': 'some-pass',
-                     'name': 'name',
-                     'email': 'email',
-                 },
-                 response={
-                     'success': 1,
-                     'access_token': {
-                         'token': 'aaa',
-                         'valid_until': 1540368218
-                     },
-                     'refresh_token': {
-                         'token': 'aaa',
-                         'valid_until': 1540368218
-                     },
-                 },
-                 error_response={
-                     'success': 0,
-                     'error': 'Error object'
-                 }
-                 ),
-        Endpoint('GET', '/users/login/', 'users',
-                 'Получение токена авторизации.'),
-        Endpoint('GET', '/users/<id>/blogs/', 'users',
-                 'Получение блогов пользователя.'),
+        func = current_app.view_functions[rule.endpoint]
+        doc = func.__doc__
+        if doc:
+            doc = doc.strip()
 
-        Endpoint('POST', '/tokens/validate/', 'token',
-                 'Проверить, валиден ли токен.'),
-        Endpoint('POST', '/tokens/refresh/', 'token', 'Обновить токен.'),
+        body = None
+        if hasattr(func, 'sample_body'):
+            body = func.sample_body
 
-        Endpoint('GET', '/page/<name>/', 'page',
-                 'Получить статью <name>.', status='Not available'),
-        Endpoint('POST', '/page/<name>/', 'page',
-                 'Обновить статью <name>. ' +
-                 'Доступно только пользователям с ролью администратор.',
-                 status='Not available'),
+        response = None
+        if hasattr(func, 'sample_response'):
+            response = func.sample_response
 
-        Endpoint('POST', '/content/', 'content',
-                 'Загрузить файл. В запросе необходимо передать поле file.'),
-        Endpoint('GET', '/content/<id>/', 'content',
-                 'Получить файл.'),
-
-        Endpoint('POST', '/feedback/', 'feedback',
-                 'Оставить отзыв. Необходима авторизация.'),
-        Endpoint('GET', '/feedback/', 'feedback',
-                 'Получить список отзывов. ' +
-                 'Доступно только пользователям с ролью администратор.'),
-
-        Endpoint('GET', '/blogs/', 'blogs',
-                 'Получить список публичных блогов. ' +
-                 'Возможные параметры запроса: page - выбранная страница.'),
-        Endpoint('POST', '/blogs/', 'blogs',
-                 'Создать новый блог',
-                 body={
-                     'title': 'string',
-                     'description': 'string',
-                     'url': 'string',
-                     'blog_type': 'int, 1 - open, 2 - closed, 3 - hidden',
-                     'image': 'content_id',
-                 }),
-        Endpoint('PUT', '/blogs/<id>/', 'blogs',
-                 'Редактировать блог',
-                 body={
-                     'title': 'string',
-                     'description': 'string',
-                     'url': 'string',
-                     'blog_type': 'int, 1 - open, 2 - closed, 3 - hidden',
-                     'image': 'content_id',
-                 }),
-        Endpoint('DELETE', '/blogs/<id>/', 'blogs',
-                 'Удалить блог'),
-        Endpoint('GET', '/blogs/<id>/', 'blogs',
-                 'Получение конкретного блога.'),
-        Endpoint('GET', '/blogs/<id>/readers/', 'blogs',
-                 'Получение читателей блога.'),
-        Endpoint('POST', '/blogs/<id>/invite/', 'blogs',
-                 'Отправить приглашение в блог.',
-                 body={
-                     'user': 45,
-                     'role': 'owner or reader or writer'
-                 },
-                 response={
-                     'success': 1,
-                     'invite': 1
-                 }),
-        Endpoint('POST', '/blogs/<id>/invite/', 'blogs',
-                 'Принять приглашение в блог.',
-                 body={
-                     'invite': 45
-                 },
-                 response={
-                     'success': 1
-                 }),
-
-        Endpoint('GET', '/posts/', 'posts',
-                 'Получение постов, главная страница.'),
-        Endpoint('GET', '/posts/<url>/', 'posts',
-                 'Получение одного поста'),
-        Endpoint('POST', '/posts/', 'posts',
-                 'Создать новый пост',
-                 body={
-                     'title': 'string',
-                     'text': 'string',
-                     'cut_name': 'string or null',
-                     'is_draft': 'bool',
-                     'url': 'string',
-                     'blog': 'blog_id',
-                 }),
-        Endpoint('PUT', '/posts/<url>/', 'posts',
-                 'Редактировать пост'),
-        Endpoint('DELETE', '/posts/<url>/', 'posts',
-                 'Удалить пост'),
-
-        Endpoint('GET', '/posts/<url>/comments', 'posts',
-                 'Получение списка комментариев к посту'),
-        Endpoint('POST', '/posts/<url>/comments', 'posts',
-                 'Отправка комментария',
-                 body={
-                     'text': 'string',
-                     'parent': 'parent_id or 0'
-                 }),
-
-    ]
+        endpoints.append(
+            Endpoint(
+                method,
+                url,
+                section,
+                doc,
+                body,
+                response
+            ))
 
     errors = []
 
@@ -194,6 +81,7 @@ def documentation():
         }
         errors.append(e)
 
+    endpoints = sorted(endpoints, key=lambda e: e.section)
     errors = sorted(errors, key=lambda e: e['error']['code'])
 
     return jsonify({

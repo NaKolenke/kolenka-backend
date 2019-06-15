@@ -17,6 +17,7 @@ bp = Blueprint('posts', __name__, url_prefix='/posts/')
 
 @bp.route("/", methods=['GET'])
 def get_posts():
+    '''Получить список публичных постов'''
     query = Post.get_public_posts()
     limit = max(1, min(int(request.args.get('limit') or 20), 100))
     paginated_query = PaginatedQuery(query, paginate_by=limit)
@@ -33,6 +34,7 @@ def get_posts():
 @bp.route("/", methods=['POST'])
 @login_required
 def create_post():
+    '''Создать пост'''
     user = get_user_from_request()
 
     post = Post(
@@ -61,6 +63,7 @@ def create_post():
 
 @bp.route("/<url>/", methods=['GET'])
 def get_post(url):
+    '''Получить пост по url'''
     post = Post.get_or_none(Post.url == url)
     if post is None:
         return errors.not_found()
@@ -87,6 +90,7 @@ def get_post(url):
 @bp.route("/<url>/", methods=['PUT'])
 @login_required
 def edit_post(url):
+    '''Изменить пост'''
     post = Post.get_or_none(Post.url == url)
     if post is None:
         return errors.not_found()
@@ -119,6 +123,7 @@ def edit_post(url):
 @bp.route("/<url>/", methods=['DELETE'])
 @login_required
 def delete_post(url):
+    '''Удалить пост'''
     post = Post.get_or_none(Post.url == url)
     if post is None:
         return errors.not_found()
@@ -148,6 +153,7 @@ def delete_post(url):
 
 @bp.route("/<url>/comments/", methods=['GET', 'POST'])
 def comments(url):
+    '''Получить список комментариев для поста или добавить новый комментарий'''
     post = Post.get_or_none(Post.url == url)
     if post is None:
         return errors.not_found()
@@ -175,7 +181,7 @@ def comments(url):
         json = request.get_json()
 
         if 'text' in json:
-            text = json.get('text')
+            text = sanitize(json.get('text'))
         else:
             return errors.wrong_payload('text')
 

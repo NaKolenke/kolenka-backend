@@ -10,6 +10,7 @@ bp = Blueprint('feedback', __name__, url_prefix='/feedback/')
 @bp.route("/", methods=['POST'])
 @login_required
 def leave_feedback():
+    '''Оставить отзыв'''
     json = request.get_json()
     if 'text' in json:
         Feedback.create(text=json['text'], user=get_user_from_request())
@@ -28,6 +29,7 @@ def leave_feedback():
 @bp.route("/", methods=['GET'])
 @login_required
 def get_feedback():
+    '''Получить список отзывов'''
     user = get_user_from_request()
     if user.is_admin:
         return jsonify({
@@ -41,6 +43,7 @@ def get_feedback():
 @bp.route("/<id>/", methods=['GET'])
 @login_required
 def resolve(id):
+    '''Пометить отзыв как решенный'''
     user = get_user_from_request()
     if user.is_admin:
         f = Feedback.get_or_none(Feedback.id == id)

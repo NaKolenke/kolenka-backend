@@ -1,15 +1,22 @@
+import functools
 from datetime import date, datetime, timezone
 import bleach
 from flask.json import JSONEncoder
 
 allowed_tags = bleach.ALLOWED_TAGS + \
     ['div', 'span', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'p', 'u', 's', 'hr',
-     'table', 'tbody', 'tr', 'td', 'th']
+     'table', 'tbody', 'tr', 'td', 'th', 'img', 'pre', 'sup', 'sub', 'del',
+     'br', 'iframe']
 
 allowed_attrs = dict(bleach.ALLOWED_ATTRIBUTES)
-allowed_attrs.update({'*': ['data', 'style']})
+allowed_attrs.update(
+    {
+        '*': ['data', 'style'],
+        'img': ['src', 'width', 'height', 'alt', 'title'],
+        'iframe': ['src', 'allowfullscreen', 'frameborder', 'width', 'height']
+    })
 
-allowed_styles = ['color', 'text-align']
+allowed_styles = ['color', 'text-align', 'visibility']
 
 
 def sanitize(html):
@@ -24,6 +31,17 @@ def sanitize(html):
         strip=True)
     ret = bleach.linkify(ret)
     return ret
+
+
+def doc_sample(body=None, response=None):
+    def func_wrapper(fn):
+        @functools.wraps(fn)
+        def wrapped(*args, **kwargs):
+            return fn(*args, **kwargs)
+        wrapped.sample_body = body
+        wrapped.sample_response = response
+        return wrapped
+    return func_wrapper
 
 
 class CustomJSONEncoder(JSONEncoder):

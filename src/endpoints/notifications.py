@@ -12,6 +12,7 @@ bp = Blueprint('notifications', __name__, url_prefix='/notifications/')
 @bp.route('/', methods=['GET'])
 @login_required
 def get():
+    '''Получить список уведомлений'''
     query = Notification.get_user_notifications(get_user_from_request())
     limit = max(1, min(int(request.args.get('limit') or 20), 100))
     paginated = PaginatedQuery(query, paginate_by=limit)
@@ -28,6 +29,7 @@ def get():
 @bp.route('/', methods=['PUT'])
 @login_required
 def mark_as_read():
+    '''Пометить уведомления как прочитанные'''
     user = get_user_from_request()
     json = request.get_json()
     if 'ids' in json:
@@ -43,6 +45,7 @@ def mark_as_read():
 @bp.route('/test', methods=['GET'])
 @login_required
 def test_notification():
+    '''Создать тестовое уведомление'''
     user = get_user_from_request()
     n = Notification.create(
         user=user,
