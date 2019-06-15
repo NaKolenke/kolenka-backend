@@ -5,6 +5,7 @@ from playhouse.flask_utils import PaginatedQuery
 from src.auth import login_required, get_user_from_request
 from src.model.models import User, Token, Content, Blog, Post
 from src import errors
+from src.utils import sanitize
 
 
 bp = Blueprint('users', __name__, url_prefix='/users/')
@@ -107,7 +108,7 @@ def current_user():
         user.password = json.get('password', user.password)
         user.email = json.get('email', user.email)
         user.name = json.get('name', user.name)
-        user.about = json.get('about', user.about)
+        user.about = sanitize(json.get('about', user.about))
         user.birthday = json.get('birthday', user.birthday)
         if 'avatar' in json:
             user.avatar = Content.get_or_none(Content.id == json['avatar'])

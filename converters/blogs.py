@@ -34,13 +34,14 @@ for b in TuBlog.select():
 
     about = content.replace_uploads_in_text(owner, b.blog_description)
 
+    url = b.blog_url or 'blog' + str(b.blog)
     blog = Blog.create(
         id=b.blog,
         created_date=b.blog_date_add,
         updated_date=updated,
         description=about,
         title=b.blog_title,
-        url=b.blog_url,
+        url=url,
         blog_type=blog_type,
         creator=owner,
         image=avatar

@@ -5,6 +5,7 @@ from src.auth import login_required, get_user_from_request
 from src.model.models import User, Blog, BlogParticipiation, Content, \
     BlogInvite, Post
 from src import errors
+from src.utils import sanitize
 
 
 bp = Blueprint('blogs', __name__, url_prefix='/blogs/')
@@ -241,7 +242,7 @@ def join(url):
 def fill_blog_from_json(blog, json):
     if json is not None:
         blog.title = json.get('title', blog.title)
-        blog.description = json.get('description', blog.description)
+        blog.description = sanitize(json.get('description', blog.description))
         blog.url = json.get('url', blog.url)
         blog.blog_type = json.get('blog_type', blog.blog_type)
         if 'image' in json:

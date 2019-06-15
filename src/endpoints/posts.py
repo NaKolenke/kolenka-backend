@@ -4,6 +4,7 @@ from playhouse.flask_utils import PaginatedQuery
 from src.auth import get_user_from_request, login_required
 from src.model.models import Post, Blog, Comment
 from src import errors
+from src.utils import sanitize
 
 
 class BlogError:
@@ -204,7 +205,7 @@ def comments(url):
 def fill_post_from_json(post, json):
     if json is not None:
         post.title = json.get('title', post.title)
-        post.text = json.get('text', post.text)
+        post.text = sanitize(json.get('text', post.text))
 
         post.has_cut = '<cut>' in post.text
         post.cut_text = post.text.split('<cut>')[0]
