@@ -3,6 +3,9 @@ from src.model.models import Feedback
 from src.telegram import Telegram
 from src.auth import login_required, get_user_from_request
 from src import errors
+from urllib import request as lib_request
+from urllib.parse import urlencode
+import json as lib_json
 
 bp = Blueprint('feedback', __name__, url_prefix='/feedback/')
 
@@ -19,8 +22,39 @@ def leave_feedback():
             'Пользователь %s оставил отзыв: %s' %
             (get_user_from_request().username, json['text']))
 
+        res_body = None
+
+        if current_app.config['TRELLO_KEY'] and current_app.config['TRELLO_TOKEN']:
+            query = urlencode({
+                'key': current_app.config['TRELLO_KEY'],
+                'token': current_app.config['TRELLO_TOKEN'],
+                'idList': current_app.config['TRELLO_LIST_ID']
+            })
+
+            text = json['text']
+
+            req = lib_request.Request('https://api.trello.com/1/cards?' + query, lib_json.dumps({
+                'name': text[:128] + ('...' if len(text) > 128 else ''),
+                'desc': text
+            }).encode('utf-8'), {
+                'Content-Type': 'application/json; charset=utf-8'
+            })
+            res = lib_request.urlopen(req)
+
+            if res.getcode() != 200:
+                return jsonify({
+                    'success': 0,
+                    'error': {
+                        'code': -1,
+                        'message': 'Something went wrong with Trello service'
+                    }
+                })
+
+            res_body = lib_json.load(res)
+
         return jsonify({
-            'success': 1
+            'success': 1,
+            'response': res_body
         })
     else:
         return errors.wrong_payload('text')
