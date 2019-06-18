@@ -3,6 +3,7 @@ import ntpath
 import hashlib
 import datetime
 from flask import Blueprint, jsonify, request, current_app, send_file
+from playhouse.flask_utils import PaginatedQuery
 from src.auth import login_required, get_user_from_request
 from src.model.models import Content
 from src import errors
@@ -57,6 +58,22 @@ def upload():
             'success': 1,
             'file': content.to_json()
         })
+
+
+@bp.route('/owned/', methods=['GET'])
+@login_required
+def get_owned():
+    query = Content.get_user_files(get_user_from_request())
+    limit = max(1, min(int(request.args.get('limit') or 20), 100))
+    paginated = PaginatedQuery(query, paginate_by=limit)
+
+    return jsonify({
+        'success': 1,
+        'files': [p.to_json() for p in paginated.get_object_list()],
+        'meta': {
+            'page_count': paginated.get_page_count()
+        }
+    })
 
 
 @bp.route('/<id>/', methods=['GET'])

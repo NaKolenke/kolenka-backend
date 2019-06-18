@@ -31,6 +31,10 @@ class Content(db.db_wrapper.Model):
         content_dict = model_to_dict(self, exclude=get_exclude())
         return content_dict
 
+    @classmethod
+    def get_user_files(cls, user):
+        return cls.select().where(Content.user == user)
+
 
 class User(db.db_wrapper.Model):
     username = CharField(unique=True)
