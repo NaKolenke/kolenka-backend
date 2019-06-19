@@ -352,3 +352,11 @@ class Notification(db.db_wrapper.Model):
             self,
             exclude=get_exclude() + [Notification.user])
         return not_dict
+
+
+class Sticker(db.db_wrapper.Model):
+    name = TextField()
+    file = ForeignKeyField(model=Content)
+
+    def to_json(self):
+        return model_to_dict(self, exclude=[Content.user])
