@@ -25,11 +25,8 @@ def documentation():
     endpoints = []
     for rule in current_app.url_map.iter_rules():
         # exclude HEAD and OPTIONS from list
-        methods = [item for item in rule.methods
+        method = [item for item in rule.methods
                    if item not in ['HEAD', 'OPTIONS']]
-        method = str(methods)
-        if len(methods) == 1:
-            method = methods[0]
 
         url = rule.rule
         section = rule.endpoint[:rule.endpoint.find('.')]
