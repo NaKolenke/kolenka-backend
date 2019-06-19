@@ -48,6 +48,8 @@ def upload():
 
     today = datetime.date.today()
 
+    user = get_user_from_request()
+
     filename = os.path.join(
         current_app.config['UPLOAD_FOLDER'],
         str(user.id) + '/' +
@@ -59,8 +61,7 @@ def upload():
     new_path = filename + name + ext
 
     uploaded_file.save(new_path)
-
-    user = get_user_from_request()
+    
     content = Content.create(user=user.id, path=os.path.abspath(new_path))
 
     return jsonify({
