@@ -2,6 +2,7 @@ import os
 import ntpath
 import hashlib
 import datetime
+from io import SEEK_END, SEEK_SET
 from flask import Blueprint, jsonify, request, current_app, send_file
 from playhouse.flask_utils import PaginatedQuery
 from src.auth import login_required, get_user_from_request
@@ -12,6 +13,7 @@ from src import errors
 bp = Blueprint('content', __name__, url_prefix='/content/')
 
 ALLOWED_EXTENSIONS = set(['txt', 'pdf', 'png', 'jpg', 'jpeg', 'gif'])
+MAX_FILE_SIZE = 10 * 1024 * 1024 # bytes, 10mb
 
 
 def allowed_file(filename):
@@ -30,34 +32,41 @@ def upload():
     if uploaded_file.filename == '':
         return errors.content_no_file()
 
-    if uploaded_file and allowed_file(uploaded_file.filename):
-        user = get_user_from_request()
+    if not allowed_file(uploaded_file.filename):
+        return errors.content_forbidden_extension()
 
-        name = hashlib.md5(uploaded_file.read()).hexdigest()
-        uploaded_file.seek(0)
+    size = uploaded_file.read(MAX_FILE_SIZE + 1)
 
-        _, ext = ntpath.splitext(uploaded_file.filename)
+    if len(size) > MAX_FILE_SIZE:
+        return errors.content_file_size_exceeded()
 
-        today = datetime.date.today()
+    uploaded_file.seek(0)    
+    name = hashlib.md5(uploaded_file.read()).hexdigest()
+    uploaded_file.seek(0)
 
-        filename = os.path.join(
-            current_app.config['UPLOAD_FOLDER'],
-            str(user.id) + '/' +
-            str(today.year) + '/' +
-            str(today.month) + '/')
+    _, ext = ntpath.splitext(uploaded_file.filename)
 
-        os.makedirs(filename, exist_ok=True)
+    today = datetime.date.today()
 
-        new_path = filename + name + ext
+    filename = os.path.join(
+        current_app.config['UPLOAD_FOLDER'],
+        str(user.id) + '/' +
+        str(today.year) + '/' +
+        str(today.month) + '/')
 
-        uploaded_file.save(new_path)
+    os.makedirs(filename, exist_ok=True)
 
-        content = Content.create(user=user.id, path=os.path.abspath(new_path))
+    new_path = filename + name + ext
 
-        return jsonify({
-            'success': 1,
-            'file': content.to_json()
-        })
+    uploaded_file.save(new_path)
+
+    user = get_user_from_request()
+    content = Content.create(user=user.id, path=os.path.abspath(new_path))
+
+    return jsonify({
+        'success': 1,
+        'file': content.to_json()
+    })
 
 
 @bp.route('/owned/', methods=['GET'])
