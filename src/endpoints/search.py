@@ -15,12 +15,16 @@ def get():
     return errors.wrong_payload('q')
 
   if search_type == 'post':
-    query = Post.get_public_posts().where(Post.title.contains(search_query))
+    query = Post.get_public_posts().where(
+      Post.title.contains(search_query) | Post.text.contains(search_query)
+    )
   elif search_type == 'blog':
-    query = Blog.get_public_blogs().where(Blog.title.contains(search_query))
+    query = Blog.get_public_blogs().where(
+      Blog.title.contains(search_query) | Blog.description.contains(search_query)
+    )
   elif search_type == 'user':
     query = User.select().where(
-      (User.username.contains(search_query)) | (User.name.contains(search_query))
+      User.username.contains(search_query) | User.name.contains(search_query)
     )
   else:
     return errors.wrong_payload('type')
