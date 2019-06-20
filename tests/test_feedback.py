@@ -1,6 +1,7 @@
 import datetime
 import pytest
 from src.model.models import User, Feedback
+from src.trello import Trello
 
 @pytest.fixture
 def feedback():
@@ -13,7 +14,10 @@ def feedback():
     db.db_wrapper.database.close()
 
 
-def test_leave_feedback(client, user_token):
+def test_leave_feedback(client, user_token, mocker):
+    mocker.patch.object(Trello, 'create_card')
+    Trello.create_card.return_value = True
+
     rv = client.post('/feedback/',
                      json={
                          'text': 'some text'
@@ -24,6 +28,7 @@ def test_leave_feedback(client, user_token):
     assert rv.status_code == 200
     assert rv.json['success'] == 1
     assert Feedback.select().count() == 1
+    Trello.create_card.assert_called_with('some text')
 
 
 def test_leave_feedback_no_text(client, user_token):

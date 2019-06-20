@@ -2,7 +2,6 @@ import os
 import ntpath
 import hashlib
 import datetime
-from io import SEEK_END, SEEK_SET
 from flask import Blueprint, jsonify, request, current_app, send_file
 from playhouse.flask_utils import PaginatedQuery
 from src.auth import login_required, get_user_from_request
@@ -13,7 +12,7 @@ from src import errors
 bp = Blueprint('content', __name__, url_prefix='/content/')
 
 ALLOWED_EXTENSIONS = set(['txt', 'pdf', 'png', 'jpg', 'jpeg', 'gif'])
-MAX_FILE_SIZE = 10 * 1024 * 1024 # bytes, 10mb
+MAX_FILE_SIZE = 10 * 1024 * 1024  # bytes, 10mb
 
 
 def allowed_file(filename):
@@ -40,7 +39,7 @@ def upload():
     if len(size) > MAX_FILE_SIZE:
         return errors.content_file_size_exceeded()
 
-    uploaded_file.seek(0)    
+    uploaded_file.seek(0)
     name = hashlib.md5(uploaded_file.read()).hexdigest()
     uploaded_file.seek(0)
 
@@ -61,7 +60,7 @@ def upload():
     new_path = filename + name + ext
 
     uploaded_file.save(new_path)
-    
+
     content = Content.create(user=user.id, path=os.path.abspath(new_path))
 
     return jsonify({

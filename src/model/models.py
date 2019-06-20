@@ -54,13 +54,7 @@ class User(db.db_wrapper.Model):
         return user_dict
 
     def to_json_with_email(self):
-        new_exclude = [
-            item
-            for item in get_exclude()
-            if item not in [User.email]
-        ]
-
-        user_dict = model_to_dict(self, exclude=new_exclude)
+        user_dict = model_to_dict(self, exclude=[User.password, Content.user])
         return user_dict
 
 
@@ -359,4 +353,4 @@ class Sticker(db.db_wrapper.Model):
     file = ForeignKeyField(model=Content)
 
     def to_json(self):
-        return model_to_dict(self, exclude=[Content.user])
+        return model_to_dict(self, exclude=get_exclude())

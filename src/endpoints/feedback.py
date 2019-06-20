@@ -3,7 +3,7 @@ from src.model.models import Feedback
 from src.telegram import Telegram
 from src.auth import login_required, get_user_from_request
 from src import errors
-from src.trello import send_to_trello
+from src.trello import Trello
 
 bp = Blueprint('feedback', __name__, url_prefix='/feedback/')
 
@@ -20,7 +20,9 @@ def leave_feedback():
             'Пользователь %s оставил отзыв: %s' %
             (get_user_from_request().username, json['text']))
 
-        success = send_to_trello(current_app.config, json['text'])
+        success = Trello(current_app.config).create_card(json['text'])
+        if not success:
+            return errors.feedback_trello_error()
 
         return jsonify({
             'success': 1
