@@ -332,6 +332,13 @@ class Notification(db.db_wrapper.Model):
         ).order_by(Notification.created_date.desc())
 
     @classmethod
+    def get_user_unread_notifications(cls, user):
+        return cls.select().where(
+            (Notification.user == user) &
+            (Notification.is_new == True)  # noqa E712
+        ).order_by(Notification.created_date.desc())
+
+    @classmethod
     def mark_notification_as_readed(cls, user, notification_id):
         notification = cls.get_or_none(
             (Notification.user == user) &
