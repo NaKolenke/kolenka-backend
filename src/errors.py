@@ -42,3 +42,5 @@ def content_file_size_exceeded(): return prepare_error(32, 'Size of the file is 
 
 def blog_no_access(): return prepare_error(40, 'No access to blog', 400)
 def blog_not_found(): return prepare_error(41, 'Blog not found', 400)
+
+def post_url_already_taken() : return prepare_error(50, 'A post with this url already exists', 400)

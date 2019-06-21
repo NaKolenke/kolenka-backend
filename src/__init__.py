@@ -27,7 +27,7 @@ def create_app():
             "Current version is 1.0.0"
 
     from src.endpoints import users, tokens, doc, content, feedback, blogs, \
-        posts, tags, notifications, stickers, search
+        posts, tags, notifications, stickers, search, pages
 
     app.register_blueprint(users.bp)
     app.register_blueprint(tokens.bp)
@@ -40,6 +40,7 @@ def create_app():
     app.register_blueprint(notifications.bp)
     app.register_blueprint(stickers.bp)
     app.register_blueprint(search.bp)
+    app.register_blueprint(pages.bp)
 
     @app.before_request
     def before_request():

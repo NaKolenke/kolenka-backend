@@ -360,3 +360,12 @@ class Sticker(db.db_wrapper.Model):
 
     def to_json(self):
         return model_to_dict(self, exclude=[Content.user])
+
+
+class Page(db.db_wrapper.Model):
+    title = TextField()
+    body = TextField()
+    creator = ForeignKeyField(model=User)
+    updater = ForeignKeyField(model=User)
+    created_date = DateTimeField()
+    updated_date = DateTimeField()

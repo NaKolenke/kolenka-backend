@@ -33,7 +33,9 @@ def create_tables():
         Message,
         DatabaseInfo,
         Notification,
-        Sticker])
+        Sticker,
+        Page
+    ])
 
     db_wrapper.database.close()
 
