@@ -1,19 +1,22 @@
 import requests
-from urllib.parse import urlencode
 
-def send_to_trello(config, text):
-  if not config['TRELLO_KEY'] or not config['TRELLO_TOKEN']:
-    return False
 
-  query = urlencode({
-    'key': config['TRELLO_KEY'],
-    'token': config['TRELLO_TOKEN'],
-    'idList': config['TRELLO_LIST_ID']
-  })
+class Trello():
 
-  req = requests.post('https://api.trello.com/1/cards?' + query, data={
-    'name': text[:128] + ('...' if len(text) > 128 else ''),
-    'desc': text
-  })
+    def __init__(self, config):
+        self.query = {
+            'key': config['TRELLO_KEY'],
+            'token': config['TRELLO_TOKEN'],
+            'idList': config['TRELLO_LIST_ID']
+        }
 
-  return req.status_code == 200
+    def create_card(self, text):
+        req = requests.post(
+            'https://api.trello.com/1/cards',
+            params=self.query,
+            data={
+                'name': text[:128] + ('...' if len(text) > 128 else ''),
+                'desc': text
+            })
+
+        return req.status_code == 200

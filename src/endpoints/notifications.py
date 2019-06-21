@@ -26,6 +26,23 @@ def get():
     })
 
 
+@bp.route('/new', methods=['GET'])
+@login_required
+def get_new():
+    '''Получить список новых уведомлений'''
+    query = Notification.get_user_unread_notifications(get_user_from_request())
+    limit = max(1, min(int(request.args.get('limit') or 20), 100))
+    paginated = PaginatedQuery(query, paginate_by=limit)
+
+    return jsonify({
+        'success': 1,
+        'notifications': [p.to_json() for p in paginated.get_object_list()],
+        'meta': {
+            'page_count': paginated.get_page_count()
+        }
+    })
+
+
 @bp.route('/', methods=['PUT'])
 @login_required
 def mark_as_read():

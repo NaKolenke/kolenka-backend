@@ -54,13 +54,7 @@ class User(db.db_wrapper.Model):
         return user_dict
 
     def to_json_with_email(self):
-        new_exclude = [
-            item
-            for item in get_exclude()
-            if item not in [User.email]
-        ]
-
-        user_dict = model_to_dict(self, exclude=new_exclude)
+        user_dict = model_to_dict(self, exclude=[User.password, Content.user])
         return user_dict
 
 
@@ -335,6 +329,13 @@ class Notification(db.db_wrapper.Model):
     def get_user_notifications(cls, user):
         return cls.select().where(
             (Notification.user == user)
+        ).order_by(Notification.created_date.desc())
+
+    @classmethod
+    def get_user_unread_notifications(cls, user):
+        return cls.select().where(
+            (Notification.user == user) &
+            (Notification.is_new == True)  # noqa E712
         ).order_by(Notification.created_date.desc())
 
     @classmethod
