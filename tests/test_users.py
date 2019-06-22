@@ -32,7 +32,7 @@ def validate_tokens(json):
 
 @pytest.fixture
 def avatar():
-    avatar = Content.create(user=1, path='/some/path')
+    avatar = Content.create(user=1, path='/some/path', mime='image/jpeg', size=1)
 
     from src.model import db
     db.db_wrapper.database.close()
