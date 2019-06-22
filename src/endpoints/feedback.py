@@ -1,5 +1,6 @@
+import datetime
 from flask import Blueprint, jsonify, request, current_app
-from src.model.models import Feedback
+from src.model.models import Feedback, User, Notification
 from src.telegram import Telegram
 from src.auth import login_required, get_user_from_request
 from src import errors
@@ -23,6 +24,14 @@ def leave_feedback():
         success = Trello(current_app.config).create_card(json['text'])
         if not success:
             return errors.feedback_trello_error()
+
+        for user in User.get_admins():
+            Notification.create(
+                user=user,
+                created_date=datetime.datetime.now(),
+                text='Пользователь %s оставил отзыв: %s' %
+                     (get_user_from_request().username, json['text']),
+                object_type='feedback',)
 
         return jsonify({
             'success': 1

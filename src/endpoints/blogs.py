@@ -3,7 +3,7 @@ from flask import Blueprint, jsonify, request
 from playhouse.flask_utils import PaginatedQuery
 from src.auth import login_required, get_user_from_request
 from src.model.models import User, Blog, BlogParticipiation, Content, \
-    BlogInvite, Post
+    BlogInvite, Post, Notification
 from src import errors
 from src.utils import sanitize, doc_sample
 
@@ -228,6 +228,13 @@ def invites(url):
         invite = BlogInvite.create(blog=blog, user_from=user, user_to=user_to,
                                    role=role_to)
 
+        Notification.create(
+            user=user,
+            created_date=datetime.datetime.now(),
+            text='Вас пригласили в блог "{0}"'.format(blog.title),
+            object_type='invite',
+            object_id=invite.id)
+
         return jsonify({
             'success': 1,
             'invite': invite.id,
@@ -249,6 +256,13 @@ def join(url):
         return errors.not_authorized()
     if BlogParticipiation.get_or_none(blog=blog, user=user) is None:
         BlogParticipiation.create(blog=blog, user=user, role=3)
+
+    Notification.create(
+        user=user,
+        created_date=datetime.datetime.now(),
+        text='Вы присоединились к блогу "{0}"'.format(blog.title),
+        object_type='blog',
+        object_id=blog.id)
 
     return jsonify({
         'success': 1

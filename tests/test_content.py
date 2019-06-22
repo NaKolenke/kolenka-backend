@@ -1,8 +1,12 @@
 import os
+import platform
 import datetime
 
 
 def test_content(client, user_token):
+    if platform.system() == 'Windows':
+        # skip, because content needs specific native library
+        return
     today = datetime.date.today()
     filename = str(user_token[0].id) + '/'\
         + str(today.year) + '/'\

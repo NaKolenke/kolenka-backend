@@ -2,7 +2,7 @@ import datetime
 from flask import Blueprint, jsonify, request
 from playhouse.flask_utils import PaginatedQuery
 from src.auth import get_user_from_request, login_required
-from src.model.models import Post, Blog, Comment
+from src.model.models import Post, Blog, Comment, Notification
 from src import errors
 from src.utils import sanitize
 
@@ -201,6 +201,14 @@ def comments(url):
             parent=parent,
             level=level
         )
+
+        Notification.create(
+            user=post.creator,
+            created_date=datetime.datetime.now(),
+            text='Пользователь {0} оставил комментарий к вашему посту {1}: {2}'
+                 .format(user.name, post.title, text),
+            object_type='comment',
+            object_id=comment.id)
 
         return jsonify({
             'success': 1,

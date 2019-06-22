@@ -68,6 +68,10 @@ class User(db.db_wrapper.Model):
         user_dict = model_to_dict(self, exclude=[User.password, Content.user])
         return user_dict
 
+    @classmethod
+    def get_admins(cls):
+        return cls.select().where(User.is_admin == True)
+
 
 class Token(db.db_wrapper.Model):
     user = ForeignKeyField(model=User, backref='tokens')
