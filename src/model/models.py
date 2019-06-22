@@ -17,7 +17,7 @@ from src.model import db
 
 
 def get_exclude():
-    return [User.password, User.email, Content.user]
+    return [User.password, User.email, Content.user, Content.path]
 
 
 class DatabaseInfo(db.db_wrapper.Model):
