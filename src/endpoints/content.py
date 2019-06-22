@@ -24,6 +24,9 @@ def allowed_file(filename):
 @login_required
 def upload():
     '''Загрузить файл'''
+
+    import magic
+
     if 'file' not in request.files:
         return errors.content_no_file()
 
@@ -34,9 +37,10 @@ def upload():
     if not allowed_file(uploaded_file.filename):
         return errors.content_forbidden_extension()
 
-    size = uploaded_file.read(MAX_FILE_SIZE + 1)
+    file_content = uploaded_file.read(MAX_FILE_SIZE + 1)
 
-    if len(size) > MAX_FILE_SIZE:
+    size = len(file_content)
+    if size > MAX_FILE_SIZE:
         return errors.content_file_size_exceeded()
 
     uploaded_file.seek(0)
@@ -58,10 +62,17 @@ def upload():
     os.makedirs(filename, exist_ok=True)
 
     new_path = filename + name + ext
-
     uploaded_file.save(new_path)
 
-    content = Content.create(user=user.id, path=os.path.abspath(new_path))
+    full_path = os.path.abspath(new_path)
+
+    mime = magic.from_file(full_path, mime=True)
+
+    content = Content.create(
+        user=user.id,
+        path=full_path,
+        size=size,
+        mime=mime)
 
     return jsonify({
         'success': 1,

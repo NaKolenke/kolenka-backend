@@ -46,3 +46,9 @@ def blog_not_found(): return prepare_error(41, 'Blog not found', 400)
 def post_url_already_taken() : return prepare_error(50, 'A post with this url already exists', 400)
 
 def feedback_trello_error(): return prepare_error(60, 'Cannot connect to trello', 500)
+
+def user_avatar_is_not_image(): return prepare_error(70, 'Avatar is not an image', 400)
+def user_avatar_too_large(): return prepare_error(71, 'Avatar too large', 400)
+
+def sticker_is_not_image(): return prepare_error(80, 'Sticker is not an image', 400)
+def sticker_too_large(): return prepare_error(81, 'Sticker too large', 400)

@@ -117,7 +117,14 @@ def current_user():
         user.about = sanitize(json.get('about', user.about))
         user.birthday = json.get('birthday', user.birthday)
         if 'avatar' in json:
-            user.avatar = Content.get_or_none(Content.id == json['avatar'])
+            content = Content.get_or_none(Content.id == json['avatar'])
+            if content:
+                if not content.is_image:
+                    return errors.user_avatar_is_not_image()
+                elif not content.is_small_image:
+                    return errors.user_avatar_too_large()
+                else:
+                    user.avatar = content
 
         user.save()
 

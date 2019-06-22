@@ -1,4 +1,5 @@
-from peewee import Proxy, BooleanField, CharField
+import os
+from peewee import Proxy, BooleanField, CharField, BigIntegerField
 from playhouse.migrate import migrate, SchemaMigrator
 
 
@@ -31,9 +32,31 @@ def migration_v2(db, migrator: SchemaMigrator):
         )
 
 
+def migration_v3(db, migrator: SchemaMigrator):
+    print('Applying migration v3')
+
+    import magic
+    from src.model.models import Content
+
+    with db.atomic():
+        migrate(
+            migrator.add_column('content', 'mime',
+                                CharField(default="")),
+            migrator.add_column('content', 'size',
+                                BigIntegerField(default=0)),
+        )
+    query = Content.select()
+
+    for c in query:
+        c.mime = magic.from_file(c.path, mime=True)
+        c.size = os.stat(c.path).st_size
+        c.save()
+
+
 migrations = [
     migration_v1,
     migration_v2,
+    migration_v3,
 ]
 
 

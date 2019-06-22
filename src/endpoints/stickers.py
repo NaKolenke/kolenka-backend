@@ -33,9 +33,16 @@ def post():
     if len(json['name']) == 0:
         return errors.wrong_payload('name')
 
+    content = Content.get_or_none(Content.id == json['file'])
+    if content:
+        if not content.is_image:
+            return errors.sticker_is_not_image()
+        elif not content.is_small_image:
+            return errors.sticker_too_large()
+
     sticker = Sticker.create(
         name=json['name'],
-        file=Content.get_or_none(Content.id == json['file'])
+        file=content
     )
 
     return jsonify({

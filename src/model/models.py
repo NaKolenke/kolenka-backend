@@ -2,6 +2,7 @@ import datetime
 import secrets
 from peewee import \
     IntegerField, \
+    BigIntegerField, \
     CharField, \
     TextField, \
     ForeignKeyField, \
@@ -26,10 +27,20 @@ class DatabaseInfo(db.db_wrapper.Model):
 class Content(db.db_wrapper.Model):
     user = IntegerField()
     path = CharField()
+    mime = CharField()
+    size = BigIntegerField()
 
     def to_json(self):
         content_dict = model_to_dict(self, exclude=get_exclude())
         return content_dict
+
+    @property
+    def is_image(self):
+        return "image/" in self.mime
+
+    @property
+    def is_small_image(self):
+        return self.is_image and self.size < 1024 * 25  # 25 kb?
 
     @classmethod
     def get_user_files(cls, user):

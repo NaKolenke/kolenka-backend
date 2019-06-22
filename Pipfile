@@ -10,6 +10,7 @@ peewee = "*"
 requests = "*"
 flask-cors = "*"
 bleach = "*"
+python-magic = "*"
 
 [dev-packages]
 pytest = "*"
