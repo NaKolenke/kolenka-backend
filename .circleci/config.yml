@@ -46,6 +46,17 @@ jobs:
           name: Deploy Over SSH
           command: |
             ssh $SSH_USER@$SSH_HOST "./deploy.sh $CIRCLE_BRANCH"
+  deploy-prod:
+    machine:
+      enabled: true
+    steps:
+      - add_ssh_keys:
+          fingerprints:
+            - "62:72:3a:58:97:e4:92:5e:9b:b4:ca:ee:2d:19:ef:65"
+      - run:
+          name: Deploy Production Over SSH
+          command: |
+            ssh $SSH_USER@$SSH_HOST "./deploy.sh $CIRCLE_BRANCH prod"
 
 workflows:
   version: 2
@@ -58,3 +69,12 @@ workflows:
           filters:
             branches:
               only:  master
+  build-and-prod-deploy:
+    jobs:
+      - build
+      - deploy-prod:
+          requires:
+            - build
+          filters:
+            tags:
+              only: /^v.*/

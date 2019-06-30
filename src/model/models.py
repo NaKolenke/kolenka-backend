@@ -70,7 +70,7 @@ class User(db.db_wrapper.Model):
 
     @classmethod
     def get_admins(cls):
-        return cls.select().where(User.is_admin == True)
+        return cls.select().where(User.is_admin == True)  # noqa E712
 
 
 class Token(db.db_wrapper.Model):
