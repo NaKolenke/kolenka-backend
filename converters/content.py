@@ -2,6 +2,7 @@ import os
 import ntpath
 import re
 import hashlib
+import magic
 from shutil import copyfile
 from src.model.models import Content
 from converters.models import TuMresourceTarget, TuMresource
@@ -175,7 +176,14 @@ def upload_image(user_id, year, month, path):
 
         copyfile(path, new_path)
 
-        return Content.create(user=user_id, path=os.path.abspath(new_path))
+        c_mime = magic.from_file(new_path, mime=True)
+        c_size = os.stat(new_path).st_size
+
+        return Content.create(
+            user=user_id,
+            path=os.path.abspath(new_path),
+            mime=c_mime,
+            size=c_size)
     return None
 
 

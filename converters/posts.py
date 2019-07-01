@@ -30,6 +30,7 @@ for t in TuTopic.select():
         updated_date=updated,
         title=t.topic_title,
         cut_text=cut,
+        has_cut='<cut>' in text,
         text=text,
         rating=0,
         is_draft=t.topic_publish == 0,
