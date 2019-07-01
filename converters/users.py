@@ -42,7 +42,7 @@ for u in TuUser.select():
 
         user = User.create(
             id=u.user,
-            login=u.user_login,
+            username=u.user_login,
             password=u.user_password,
             email=u.user_mail,
             registration_date=u.user_date_register,
@@ -80,7 +80,7 @@ for id in force_created_users:
 
     User.create(
         id=u.user,
-        login=u.user_login,
+        username=u.user_login,
         password=u.user_password,
         email=u.user_mail,
         registration_date=u.user_date_register,

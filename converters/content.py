@@ -6,7 +6,7 @@ from shutil import copyfile
 from src.model.models import Content
 from converters.models import TuMresourceTarget, TuMresource
 
-content_root = '/var/www/kolenka/uploads/'
+content_root = '/var/www/old.kolenka/uploads/'
 
 
 def get_path_from_mres(res):
