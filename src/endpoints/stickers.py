@@ -1,6 +1,7 @@
 from flask import Blueprint, jsonify, request
 from src.auth import login_required, get_user_from_request
 from src.model.models import Sticker, Content
+import src.endpoints.content as content_bp
 from src import errors
 
 bp = Blueprint('stickers', __name__, url_prefix='/stickers/')
@@ -16,6 +17,15 @@ def get():
         'stickers': [item.to_json() for item in query]
     })
 
+
+@bp.route('/<name>', methods=['GET'])
+@login_required
+def get_sticker(name):
+    sticker = Sticker.get_or_none(Sticker.name == name)
+    if sticker is None:
+        return errors.not_found()
+
+    return content_bp.get(sticker.id)
 
 @bp.route('/', methods=['POST'])
 @login_required
