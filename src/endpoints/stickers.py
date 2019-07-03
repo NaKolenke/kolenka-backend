@@ -19,7 +19,6 @@ def get():
 
 
 @bp.route('/<name>', methods=['GET'])
-@login_required
 def get_sticker(name):
     sticker = Sticker.get_or_none(Sticker.name == name)
     if sticker is None:
