@@ -56,7 +56,7 @@ jobs:
       - run:
           name: Deploy Production Over SSH
           command: |
-            ssh $SSH_USER@$SSH_HOST "./deploy.sh $CIRCLE_BRANCH prod"
+            ssh $SSH_USER@$SSH_HOST "./deploy.sh master prod"
 
 workflows:
   version: 2
