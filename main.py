@@ -39,5 +39,7 @@ For launching flask server see README.md''')
                 import converters.posts
             elif sys.argv[2] == 'comments':
                 import converters.comments
+            elif sys.argv[2] == 'betacontent':
+                import converters.betacontent
         else:
             print('Unrecognized command')
