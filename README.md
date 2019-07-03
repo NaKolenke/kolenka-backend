@@ -51,7 +51,7 @@ https://docs.python-guide.org/dev/virtualenvs/
 Для postgresql
 
 ```
- SELECT 'SELECT SETVAL(' ||
+SELECT 'SELECT SETVAL(' ||
        quote_literal(quote_ident(PGT.schemaname) || '.' || quote_ident(S.relname)) ||
        ', COALESCE(MAX(' ||quote_ident(C.attname)|| '), 1) ) FROM ' ||
        quote_ident(PGT.schemaname)|| '.'||quote_ident(T.relname)|| ';'
