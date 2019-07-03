@@ -24,7 +24,8 @@ def get_sticker(name):
     if sticker is None:
         return errors.not_found()
 
-    return content_bp.get(sticker.id)
+    return content_bp.get(sticker.file.id)
+
 
 @bp.route('/', methods=['POST'])
 @login_required
