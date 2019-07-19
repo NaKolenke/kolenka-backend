@@ -10,11 +10,13 @@ stickers_set = set()
 
 
 def replace_sticker(text):
-    pattern = r'<img src="\/common\/templates\/skin\/start-kit\/assets\/images\/(.*?)\..*?">'
-    items = re.findall(pattern, text)
-    for i in items:
-        stickers_set.add(i)
-    return re.sub(pattern, r':\1:', text)
+    if text:
+        pattern = r'<img src="\/common\/templates\/skin\/start-kit\/assets\/images\/(.*?)\..*?">'
+        items = re.findall(pattern, text)
+        for i in items:
+            stickers_set.add(i)
+        return re.sub(pattern, r':\1:', text)
+    return None
 
 
 for p in Post.select():
