@@ -41,5 +41,7 @@ For launching flask server see README.md''')
                 import converters.comments
             elif sys.argv[2] == 'betacontent':
                 import converters.betacontent
+            elif sys.argv[2] == 'stickers':
+                import converters.stickers
         else:
             print('Unrecognized command')
