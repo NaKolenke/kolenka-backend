@@ -77,7 +77,7 @@ class Token(db.db_wrapper.Model):
     user = ForeignKeyField(model=User, backref='tokens')
     token = CharField()
     valid_until = DateTimeField()
-    is_refresh_token = BooleanField() # deprecated
+    is_refresh_token = BooleanField()  # deprecated
     token_type = CharField()
 
     @classmethod
@@ -87,6 +87,7 @@ class Token(db.db_wrapper.Model):
                 user=user,
                 token=secrets.token_hex(),
                 token_type='access',
+                is_refresh_token=False,
                 valid_until=vu)
 
     @classmethod
@@ -96,6 +97,7 @@ class Token(db.db_wrapper.Model):
                 user=user,
                 token=secrets.token_hex(),
                 token_type='refresh',
+                is_refresh_token=True,
                 valid_until=vu)
 
     @classmethod
@@ -105,6 +107,7 @@ class Token(db.db_wrapper.Model):
                 user=user,
                 token=secrets.token_hex(),
                 token_type='recover',
+                is_refresh_token=False,
                 valid_until=vu)
 
 
