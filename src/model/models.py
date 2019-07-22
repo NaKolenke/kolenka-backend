@@ -77,20 +77,34 @@ class Token(db.db_wrapper.Model):
     user = ForeignKeyField(model=User, backref='tokens')
     token = CharField()
     valid_until = DateTimeField()
-    is_refresh_token = BooleanField()
+    is_refresh_token = BooleanField() # deprecated
+    token_type = CharField()
 
     @classmethod
     def generate_access_token(cls, user):
         vu = datetime.datetime.now() + datetime.timedelta(days=30)
         return cls.create(
-                user=user, token=secrets.token_hex(), is_refresh_token=False,
+                user=user,
+                token=secrets.token_hex(),
+                token_type='access',
                 valid_until=vu)
 
     @classmethod
     def generate_refresh_token(cls, user):
         vu = datetime.datetime.now() + datetime.timedelta(days=90)
         return cls.create(
-                user=user, token=secrets.token_hex(), is_refresh_token=True,
+                user=user,
+                token=secrets.token_hex(),
+                token_type='refresh',
+                valid_until=vu)
+
+    @classmethod
+    def generate_recover_token(cls, user):
+        vu = datetime.datetime.now() + datetime.timedelta(days=1)
+        return cls.create(
+                user=user,
+                token=secrets.token_hex(),
+                token_type='recover',
                 valid_until=vu)
 
 

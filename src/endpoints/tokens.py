@@ -18,7 +18,7 @@ def valid():
 
     actual_token = Token.get_or_none(
         (Token.token == token) &
-        (Token.is_refresh_token == False))  # noqa: E712
+        (Token.token_type == 'access'))
 
     if actual_token is None:
         return errors.token_invalid()
@@ -43,7 +43,7 @@ def refresh():
 
     actual_token = Token.get_or_none(
         (Token.token == token) &
-        (Token.is_refresh_token == True))  # noqa: E712
+        (Token.token_type == 'refresh'))
 
     if actual_token is None:
         return errors.token_invalid()

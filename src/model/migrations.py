@@ -53,10 +53,30 @@ def migration_v3(db, migrator: SchemaMigrator):
         c.save()
 
 
+def migration_v4(db, migrator: SchemaMigrator):
+    print('Applying migration v4')
+
+    from src.model.models import Token
+
+    with db.atomic():
+        migrate(
+            migrator.add_column('token', 'token_type', CharField(default="")),
+        )
+
+    query = Token.select()
+    for t in query:
+        if t.is_refresh_token:
+            t.token_type = 'refresh'
+        else:
+            t.token_type = 'access'
+        t.save()
+
+
 migrations = [
     migration_v1,
     migration_v2,
     migration_v3,
+    migration_v4,
 ]
 
 

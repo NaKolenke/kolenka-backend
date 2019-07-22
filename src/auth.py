@@ -31,7 +31,7 @@ def get_token_from_request():
     token = request.headers['Authorization']
     actual_token = Token.get_or_none(
         (Token.token == token) &
-        (Token.is_refresh_token == False)) # noqa
+        (Token.token_type == 'access'))
     return actual_token
 
 

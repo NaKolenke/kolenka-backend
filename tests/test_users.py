@@ -7,7 +7,7 @@ def validate_tokens(json):
     assert 'access_token' in json
     assert 'refresh_token' in json
 
-    access_token = Token.select().where(Token.is_refresh_token == False).get()
+    access_token = Token.select().where(Token.token_type == 'access').get()
     assert json['access_token']['token'] == access_token.token
     assert json['access_token']['valid_until'] > datetime.datetime.now(
     ).timestamp() + 60 * 60 * 24 * 29
@@ -17,7 +17,7 @@ def validate_tokens(json):
 
     assert User.get() == access_token.user
 
-    refresh_token = Token.select().where(Token.is_refresh_token == True).get()
+    refresh_token = Token.select().where(Token.token_type == 'refresh').get()
     assert json['refresh_token']['token'] == refresh_token.token
     assert json['refresh_token']['valid_until'] > datetime.datetime.now(
     ).timestamp() + 60 * 60 * 24 * 89

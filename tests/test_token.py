@@ -6,12 +6,12 @@ def validate_tokens(json):
     assert 'access_token' in json
     assert 'refresh_token' in json
 
-    access_token = Token.select().where((Token.is_refresh_token == False) & (Token.token == json['access_token']['token'])).get()
+    access_token = Token.select().where((Token.token_type == 'access') & (Token.token == json['access_token']['token'])).get()
     assert json['access_token']['valid_until'] > datetime.datetime.now().timestamp() + 60 * 60 * 24 * 29
     assert json['access_token']['valid_until'] < datetime.datetime.now().timestamp() + 60 * 60 * 24 * 31
     assert User.get() == access_token.user
 
-    refresh_token = Token.select().where((Token.is_refresh_token == True) & (Token.token == json['refresh_token']['token'])).get()
+    refresh_token = Token.select().where((Token.token_type == 'refresh') & (Token.token == json['refresh_token']['token'])).get()
     assert json['refresh_token']['valid_until'] > datetime.datetime.now().timestamp() + 60 * 60 * 24 * 89
     assert json['refresh_token']['valid_until'] < datetime.datetime.now().timestamp() + 60 * 60 * 24 * 91
     assert User.get() == refresh_token.user

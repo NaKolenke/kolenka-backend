@@ -5,7 +5,8 @@ from playhouse.flask_utils import PaginatedQuery
 from src.auth import login_required, get_user_from_request
 from src.model.models import User, Token, Content, Blog, Post
 from src import errors
-from src.utils import sanitize
+from src.email import EmailSender
+from src.utils import sanitize, doc_sample
 
 
 bp = Blueprint('users', __name__, url_prefix='/users/')
@@ -236,6 +237,61 @@ def login():
         })
 
     return errors.not_authorized()
+
+
+@bp.route("/recover-password/", methods=['POST'])
+@doc_sample(body={'email': 'email'})
+def recover_pass():
+    '''Сделать запрос на восстановление пароля'''
+    json = request.get_json()
+
+    if 'email' not in json:
+        return errors.wrong_payload('email')
+
+    user = User.get_or_none(User.email == json['email'])
+    if user is None:
+        return errors.pass_recover_no_user()
+
+    t = Token.generate_recover_token(user)
+
+    url = '<a href="' + \
+        current_app.config['HOSTNAME'] + \
+        '/recover-pass?token=' + t.token + '">Восстановить</a>'
+    text = ('Вы запросили восстановление пароля. ' +
+            'Чтобы указать новый пароль - перейдите по ссылке ' +
+            url)
+
+    sender = EmailSender(current_app.config)
+    sender.send(user.email, 'Восстановление пароля', text)
+
+    return jsonify({
+        'success': 1
+    })
+
+
+@bp.route("/new-password/", methods=['POST'])
+@doc_sample(body={'token': 'token', 'password': 'new password'})
+def new_pass():
+    '''Поменять пароль'''
+    json = request.get_json()
+
+    if 'token' not in json:
+        return errors.wrong_payload('token')
+    if 'password' not in json:
+        return errors.wrong_payload('password')
+
+    token = Token.get_or_none(Token.token == json['token'])
+    if token is None:
+        return errors.pass_recover_wrong_token()
+
+    user = token.user
+
+    password = json['password']
+    user.password = salted(password, current_app.config['PASSWORD_SALT'])
+
+    return jsonify({
+        'success': 1
+    })
 
 
 def authorize(user, password):

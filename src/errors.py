@@ -33,6 +33,12 @@ def registration_email_busy():
 def registration_username_busy():
      return prepare_error(13, 'User with this username already created', 400)
 
+def pass_recover_no_user():
+     return prepare_error(14, 'There is no user with specified email', 400)
+
+def pass_recover_wrong_token():
+     return prepare_error(15, 'Wrong token', 400)
+
 def invite_not_found(): return prepare_error(20, 'Invite not found', 404)
 def invite_wrong_role(): return prepare_error(21, 'Wrong role specified', 400)
 
