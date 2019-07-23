@@ -254,15 +254,10 @@ def recover_pass():
 
     t = Token.generate_recover_token(user)
 
-    url = '<a href="' + \
-        current_app.config['HOSTNAME'] + \
-        '/recover-pass?token=' + t.token + '">Восстановить</a>'
-    text = ('Вы запросили восстановление пароля. ' +
-            'Чтобы указать новый пароль - перейдите по ссылке ' +
-            url)
+    url = current_app.config['HOSTNAME'] + '/recover-pass?token=' + t.token
 
     sender = EmailSender(current_app.config)
-    sender.send(user.email, 'Восстановление пароля', text)
+    sender.recover_pass(url, user)
 
     return jsonify({
         'success': 1
