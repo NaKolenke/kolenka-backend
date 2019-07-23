@@ -278,11 +278,15 @@ def new_pass():
     token = Token.get_or_none(Token.token == json['token'])
     if token is None:
         return errors.pass_recover_wrong_token()
+    if token.valid_until < datetime.datetime.now():
+        return errors.token_outdated()
 
     user = token.user
 
     password = json['password']
     user.password = salted(password, current_app.config['PASSWORD_SALT'])
+
+    token.delete_instance()
 
     return jsonify({
         'success': 1
