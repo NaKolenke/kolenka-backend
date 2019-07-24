@@ -285,6 +285,7 @@ def new_pass():
 
     password = json['password']
     user.password = salted(password, current_app.config['PASSWORD_SALT'])
+    user.save()
 
     token.delete_instance()
 
