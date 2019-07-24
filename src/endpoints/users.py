@@ -122,7 +122,7 @@ def current_user():
             if content:
                 if not content.is_image:
                     return errors.user_avatar_is_not_image()
-                elif not content.is_small_image:
+                elif content.size > 1024 * 500:  # 500kb
                     return errors.user_avatar_too_large()
                 else:
                     user.avatar = content
