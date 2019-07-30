@@ -8,7 +8,6 @@ bp = Blueprint('stickers', __name__, url_prefix='/stickers/')
 
 
 @bp.route('/', methods=['GET'])
-@login_required
 def get():
     query = Sticker.select()
 
