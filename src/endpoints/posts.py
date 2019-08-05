@@ -202,13 +202,14 @@ def comments(url):
             level=level
         )
 
-        Notification.create(
-            user=post.creator,
-            created_date=datetime.datetime.now(),
-            text='Пользователь {0} оставил комментарий к вашему посту {1}: {2}'
-                 .format(user.name, post.title, text),
-            object_type='comment',
-            object_id=comment.id)
+        if user.id != post.creator.id:
+            Notification.create(
+                user=post.creator,
+                created_date=datetime.datetime.now(),
+                text='Пользователь {0} оставил комментарий к вашему посту {1}: {2}'
+                     .format(user.name, post.title, text),
+                object_type='comment',
+                object_id=comment.id)
 
         return jsonify({
             'success': 1,
