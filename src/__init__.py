@@ -1,5 +1,6 @@
 import os
 import datetime
+import subprocess
 from flask import Flask
 from flask_cors import CORS
 from src.model import db
@@ -24,7 +25,7 @@ def create_app():
     @app.route("/")
     def motd():
         return "You are at the main page of kolenka api." +\
-            "Current version is 1.0.0"
+            "Current version is " + get_app_version()
 
     from src.endpoints import users, tokens, doc, content, feedback, blogs, \
         posts, tags, notifications, stickers, search, pages
@@ -50,3 +51,13 @@ def create_app():
             user.save()
 
     return app
+
+
+def get_app_version():
+    command = 'git log --tags --simplify-by-decoration --pretty="format:%d"' +\
+                ' | grep "tag:" -m 1'
+    tags = subprocess.run(command, stdout=subprocess.PIPE, shell=True)
+    last_tags = tags.stdout.decode('utf-8')
+
+    end = min(last_tags.find(','), last_tags.find(')'))
+    return last_tags[5:end]
