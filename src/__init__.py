@@ -24,7 +24,7 @@ def create_app():
 
     @app.route("/")
     def motd():
-        return "You are at the main page of kolenka api." +\
+        return "You are at the main page of kolenka api. " +\
             "Current version is " + get_app_version()
 
     from src.endpoints import users, tokens, doc, content, feedback, blogs, \
