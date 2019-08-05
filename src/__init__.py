@@ -60,4 +60,4 @@ def get_app_version():
     last_tags = tags.stdout.decode('utf-8')
 
     end = min(last_tags.find(','), last_tags.find(')'))
-    return last_tags[5:end]
+    return last_tags[7:end]
