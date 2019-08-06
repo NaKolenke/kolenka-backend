@@ -59,5 +59,6 @@ def get_app_version():
     tags = subprocess.run(command, stdout=subprocess.PIPE, shell=True)
     last_tags = tags.stdout.decode('utf-8')
 
-    end = min(last_tags.find(','), last_tags.find(')'))
-    return last_tags[7:end]
+    start = last_tags.find('tag: v') + 6
+    end = min(last_tags.find(',', start), last_tags.find(')', start))
+    return last_tags[start:end]
