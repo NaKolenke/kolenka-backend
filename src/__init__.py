@@ -1,6 +1,7 @@
 import os
 import datetime
 import subprocess
+import logging
 from flask import Flask
 from flask_cors import CORS
 from src.model import db
@@ -11,6 +12,7 @@ from src.utils import CustomJSONEncoder
 def create_app():
     app = Flask(__name__)
     CORS(app)
+    logging.getLogger('flask_cors').level = logging.DEBUG
 
     app.config.from_object('src.config.default.Config')
     app.config.from_envvar('KOLENKA_CONFIG', silent=True)
