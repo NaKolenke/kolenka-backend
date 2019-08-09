@@ -30,7 +30,7 @@ def create_app():
             "Current version is " + get_app_version()
 
     from src.endpoints import users, tokens, doc, content, feedback, blogs, \
-        posts, tags, notifications, stickers, search, pages
+        posts, tags, notifications, stickers, search, admin
 
     app.register_blueprint(users.bp)
     app.register_blueprint(tokens.bp)
@@ -43,7 +43,7 @@ def create_app():
     app.register_blueprint(notifications.bp)
     app.register_blueprint(stickers.bp)
     app.register_blueprint(search.bp)
-    app.register_blueprint(pages.bp)
+    app.register_blueprint(admin.bp)
 
     @app.before_request
     def before_request():
