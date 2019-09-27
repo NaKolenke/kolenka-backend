@@ -72,6 +72,10 @@ class User(db.db_wrapper.Model):
     def get_admins(cls):
         return cls.select().where(User.is_admin == True)  # noqa E712
 
+    @classmethod
+    def get_users_sorted_by_active_date(cls):
+        return cls.select().order_by(User.last_active_date.desc())
+
 
 class Token(db.db_wrapper.Model):
     user = ForeignKeyField(model=User, backref='tokens')

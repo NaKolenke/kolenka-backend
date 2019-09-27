@@ -15,7 +15,7 @@ bp = Blueprint('users', __name__, url_prefix='/users/')
 @bp.route("/")
 def users():
     '''Получить список пользователей'''
-    query = User.select()
+    query = User.get_users_sorted_by_active_date()
     limit = max(1, min(int(request.args.get('limit') or 20), 100))
     paginated_query = PaginatedQuery(query, paginate_by=limit)
 
