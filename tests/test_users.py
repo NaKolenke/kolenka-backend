@@ -81,15 +81,16 @@ def test_users(client, user):
 
 def test_users_pagination(client, users):
     rv = client.get('/users/')
-    assert len(rv.json['users']
-               ) == 20, 'We should have 20 users without pagination'
-    assert rv.json['users'][0]['username'] == 'test_user0', 'With name test_user0'
+    assert len(rv.json['users']) == 20, \
+        'We should have 20 users without pagination'
+    assert rv.json['users'][0]['username'] == 'test_user29', \
+        'With name test_user29'
     assert rv.json['meta']['page_count'] == 2, 'There should be two pages'
 
     rv = client.get('/users/?page=2')
-    assert len(rv.json['users']
-               ) == 10, 'We should have 10 users on second page'
-    assert rv.json['users'][0]['username'] == 'test_user20', 'Wrong username'
+    assert len(rv.json['users']) == 10, \
+        'We should have 10 users on second page'
+    assert rv.json['users'][0]['username'] == 'test_user9', 'Wrong username'
     assert rv.json['meta']['page_count'] == 2, 'There should be two pages'
 
     rv = client.get('/users/?page=3')
