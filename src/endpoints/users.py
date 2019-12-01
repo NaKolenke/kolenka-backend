@@ -112,7 +112,6 @@ def current_user():
     if request.method == 'POST':
         json = request.get_json()
 
-        user.password = json.get('password', user.password)
         user.email = json.get('email', user.email)
         user.name = json.get('name', user.name)
         user.about = sanitize(json.get('about', user.about))

@@ -22,9 +22,11 @@ def get_posts():
     limit = max(1, min(int(request.args.get('limit') or 20), 100))
     paginated_query = PaginatedQuery(query, paginate_by=limit)
 
+    posts = [p.to_json() for p in paginated_query.get_object_list()]
+
     return jsonify({
         'success': 1,
-        'posts': [p.to_json() for p in paginated_query.get_object_list()],
+        'posts': posts,
         'meta': {
             'page_count': paginated_query.get_page_count()
         }
