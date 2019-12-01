@@ -277,7 +277,7 @@ class Post(db.db_wrapper.Model):
     def to_json(self):
         post_dict = model_to_dict(self, exclude=get_exclude())
         post_dict['comments'] = Comment.get_comments_count_for_post(self)
-        post_dict['tags'] = Tag.get_for_post(self)
+        post_dict['tags'] = [t.to_json() for t in Tag.get_for_post(self)]
         return post_dict
 
 
