@@ -58,3 +58,6 @@ def user_avatar_too_large(): return prepare_error(71, 'Avatar too large', 400)
 
 def sticker_is_not_image(): return prepare_error(80, 'Sticker is not an image', 400)
 def sticker_too_large(): return prepare_error(81, 'Sticker too large', 400)
+
+def vote_no_target(): return prepare_error(90, 'No target for vote', 400)
+def vote_no_target_type(): return prepare_error(91, 'Invalid target type', 400)

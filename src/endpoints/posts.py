@@ -22,7 +22,8 @@ def get_posts():
     limit = max(1, min(int(request.args.get('limit') or 20), 100))
     paginated_query = PaginatedQuery(query, paginate_by=limit)
 
-    posts = [p.to_json() for p in paginated_query.get_object_list()]
+    posts = [p.to_json(user=get_user_from_request())
+             for p in paginated_query.get_object_list()]
 
     return jsonify({
         'success': 1,
@@ -85,7 +86,7 @@ def get_post(url):
 
     return jsonify({
         'success': 1,
-        'post': post.to_json(),
+        'post': post.to_json(user=user),
     })
 
 

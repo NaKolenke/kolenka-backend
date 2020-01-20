@@ -6,14 +6,15 @@ from flask.json import JSONEncoder
 allowed_tags = bleach.ALLOWED_TAGS + \
     ['div', 'span', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'p', 'u', 's', 'hr',
      'table', 'tbody', 'tr', 'td', 'th', 'img', 'pre', 'sup', 'sub', 'del',
-     'br', 'iframe']
+     'br', 'iframe', 'cut']
 
 allowed_attrs = dict(bleach.ALLOWED_ATTRIBUTES)
 allowed_attrs.update(
     {
         '*': ['data', 'style'],
         'img': ['src', 'width', 'height', 'alt', 'title'],
-        'iframe': ['src', 'allowfullscreen', 'frameborder', 'width', 'height']
+        'iframe': ['src', 'allowfullscreen', 'frameborder', 'width', 'height'],
+        'cut': ['name']
     })
 
 allowed_styles = ['color', 'text-align', 'visibility']

@@ -30,7 +30,7 @@ def create_app():
             "Current version is " + get_app_version()
 
     from src.endpoints import users, tokens, doc, content, feedback, blogs, \
-        posts, tags, notifications, stickers, search, admin
+        posts, tags, notifications, stickers, search, admin, votes
 
     app.register_blueprint(users.bp)
     app.register_blueprint(tokens.bp)
@@ -44,6 +44,7 @@ def create_app():
     app.register_blueprint(stickers.bp)
     app.register_blueprint(search.bp)
     app.register_blueprint(admin.bp)
+    app.register_blueprint(votes.bp)
 
     @app.before_request
     def before_request():
@@ -57,7 +58,7 @@ def create_app():
 
 def get_app_version():
     command = 'git log --tags --simplify-by-decoration --pretty="format:%d"' +\
-                ' | grep "tag:" -m 1'
+        ' | grep "tag:" -m 1'
     tags = subprocess.run(command, stdout=subprocess.PIPE, shell=True)
     last_tags = tags.stdout.decode('utf-8')
 

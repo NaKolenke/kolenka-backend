@@ -141,7 +141,7 @@ def posts(url):
 
     return jsonify({
         'success': 1,
-        'posts': [p.to_json() for p in paginated_query.get_object_list()],
+        'posts': [p.to_json(user=user) for p in paginated_query.get_object_list()],
         'meta': {
             'page_count': paginated_query.get_page_count()
         }

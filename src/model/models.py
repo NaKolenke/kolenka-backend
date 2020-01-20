@@ -88,31 +88,31 @@ class Token(db.db_wrapper.Model):
     def generate_access_token(cls, user):
         vu = datetime.datetime.now() + datetime.timedelta(days=30)
         return cls.create(
-                user=user,
-                token=secrets.token_hex(),
-                token_type='access',
-                is_refresh_token=False,
-                valid_until=vu)
+            user=user,
+            token=secrets.token_hex(),
+            token_type='access',
+            is_refresh_token=False,
+            valid_until=vu)
 
     @classmethod
     def generate_refresh_token(cls, user):
         vu = datetime.datetime.now() + datetime.timedelta(days=90)
         return cls.create(
-                user=user,
-                token=secrets.token_hex(),
-                token_type='refresh',
-                is_refresh_token=True,
-                valid_until=vu)
+            user=user,
+            token=secrets.token_hex(),
+            token_type='refresh',
+            is_refresh_token=True,
+            valid_until=vu)
 
     @classmethod
     def generate_recover_token(cls, user):
         vu = datetime.datetime.now() + datetime.timedelta(days=1)
         return cls.create(
-                user=user,
-                token=secrets.token_hex(),
-                token_type='recover',
-                is_refresh_token=False,
-                valid_until=vu)
+            user=user,
+            token=secrets.token_hex(),
+            token_type='recover',
+            is_refresh_token=False,
+            valid_until=vu)
 
 
 class Feedback(db.db_wrapper.Model):
@@ -149,7 +149,7 @@ class Blog(db.db_wrapper.Model):
         return cls.select(Blog, readers.alias('readers')) \
             .join(BlogParticipiation, JOIN.LEFT_OUTER).where(
                 Blog.blog_type != 3
-            ).group_by(Blog.id).order_by(readers.desc())
+        ).group_by(Blog.id).order_by(readers.desc())
 
     @classmethod
     def get_readers_count(cls, blog):
@@ -168,14 +168,14 @@ class Blog(db.db_wrapper.Model):
             .join(BlogParticipiation, JOIN.LEFT_OUTER).where(
                 (BlogParticipiation.user == user) &
                 (Blog.blog_type != 3)
-            ).group_by(Blog.id).order_by(readers.desc())
+        ).group_by(Blog.id).order_by(readers.desc())
 
     @classmethod
     def get_user_role(cls, blog, user):
         query = BlogParticipiation.select().where(
-                (BlogParticipiation.user == user) &
-                (BlogParticipiation.blog == blog)
-            )
+            (BlogParticipiation.user == user) &
+            (BlogParticipiation.blog == blog)
+        )
 
         if query.count() == 0:
             return None
@@ -270,14 +270,27 @@ class Post(db.db_wrapper.Model):
     def get_public_posts_with_tag(cls, tag):
         return cls.select().join(TagMark).switch(Post).join(Blog).where(
             (Post.is_draft == False) &  # noqa: E712
-            (TagMark.tag == tag) &
+            (TagMark.tag == tag) &  # noqa: E712
             (Blog.blog_type != 3)
         ).order_by(Post.created_date.desc())
 
-    def to_json(self):
+    def to_json(self, user=None):
         post_dict = model_to_dict(self, exclude=get_exclude())
         post_dict['comments'] = Comment.get_comments_count_for_post(self)
         post_dict['tags'] = [t.to_json() for t in Tag.get_for_post(self)]
+        post_dict['rating'] = Vote.select(
+                fn.SUM(Vote.vote_value).alias('rating')
+            ).where(
+                (Vote.target_id == self.id) &  # noqa: E712
+                (Vote.target_type == 3)
+            ).first().rating or 0
+        if user is not None:
+            user_vote = Vote.get_or_none(
+                (Vote.target_id == self.id) &  # noqa: E712
+                (Vote.target_type == 3) &  # noqa: E712
+                (Vote.voter == user)
+            )
+            post_dict['user_voted'] = user_vote.vote_value if user_vote else 0
         return post_dict
 
 
@@ -405,3 +418,18 @@ class Sticker(db.db_wrapper.Model):
 
     def to_json(self):
         return model_to_dict(self, exclude=[Content.user])
+
+
+class Vote(db.db_wrapper.Model):
+    target_id = IntegerField()
+    target_type = IntegerField(choices=[
+        (1, 'user'),
+        (2, 'blog'),
+        (3, 'post'),
+        (4, 'comment'),
+    ], default=3)
+    voter = ForeignKeyField(model=User)
+    vote_value = IntegerField()
+
+    def to_json(self):
+        return model_to_dict(self, exclude=get_exclude())
