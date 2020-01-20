@@ -8,7 +8,7 @@ for v in TuVote.select():
     creator = User.get_or_none(User.id == v.user_voter)
     if not creator:
         print('Skipped vote. Owner:' +
-              TuUser.get(TuUser.user == v.user).user_login)
+              TuUser.get(TuUser.user == v.user_voter).user_login)
         continue
 
     t_id = v.target
