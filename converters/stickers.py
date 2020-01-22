@@ -23,7 +23,7 @@ def replace_sticker(text):
             stickers_set.add(i)
         text = re.sub(pattern, r':\1:', text)
 
-        pattern = r'<img src="http:\/\/k.faisu.net\/kreguzda\/images\/smilies\/(.*?)\..*?" />'
+        pattern = r'<img src="http:\/\/k\.faisu\.net\/kreguzda\/images\/smilies\/(.*?)\..*?" />'
         items = re.findall(pattern, text)
         for i in items:
             stickers_set.add(i)
