@@ -1,6 +1,6 @@
 from flask import Blueprint, jsonify, request
 from playhouse.flask_utils import PaginatedQuery
-from src.model.models import Post, Tag
+from src.model.models import Post, Tag, Vote
 from src.auth import get_user_from_request
 from src import errors
 from src.utils import doc_sample
@@ -39,10 +39,12 @@ def tag(title):
     limit = max(1, min(int(request.args.get('limit') or 20), 100))
     paginated_query = PaginatedQuery(query, paginate_by=limit)
 
+    posts = [p.to_json() for p in paginated_query.get_object_list()]
+    posts = [Vote.add_votes_info(p, 3, get_user_from_request()) for p in posts]
+
     return jsonify({
         'success': 1,
-        'posts': [p.to_json(user=get_user_from_request())
-                  for p in paginated_query.get_object_list()],
+        'posts': posts,
         'meta': {
             'page_count': paginated_query.get_page_count()
         }

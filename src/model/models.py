@@ -62,6 +62,7 @@ class User(db.db_wrapper.Model):
 
     def to_json(self):
         user_dict = model_to_dict(self, exclude=get_exclude())
+
         return user_dict
 
     def to_json_with_email(self):
@@ -196,6 +197,7 @@ class Blog(db.db_wrapper.Model):
     def to_json(self):
         blog_dict = model_to_dict(self, exclude=get_exclude())
         blog_dict['readers'] = Blog.get_readers_count(self)
+
         return blog_dict
 
 
@@ -274,23 +276,11 @@ class Post(db.db_wrapper.Model):
             (Blog.blog_type != 3)
         ).order_by(Post.created_date.desc())
 
-    def to_json(self, user=None):
+    def to_json(self):
         post_dict = model_to_dict(self, exclude=get_exclude())
         post_dict['comments'] = Comment.get_comments_count_for_post(self)
         post_dict['tags'] = [t.to_json() for t in Tag.get_for_post(self)]
-        post_dict['rating'] = Vote.select(
-                fn.SUM(Vote.vote_value).alias('rating')
-            ).where(
-                (Vote.target_id == self.id) &  # noqa: E712
-                (Vote.target_type == 3)
-            ).first().rating or 0
-        if user is not None:
-            user_vote = Vote.get_or_none(
-                (Vote.target_id == self.id) &  # noqa: E712
-                (Vote.target_type == 3) &  # noqa: E712
-                (Vote.voter == user)
-            )
-            post_dict['user_voted'] = user_vote.vote_value if user_vote else 0
+
         return post_dict
 
 
@@ -302,7 +292,7 @@ class Comment(db.db_wrapper.Model):
     created_date = DateTimeField()
     updated_date = DateTimeField()
     text = TextField()
-    rating = IntegerField(default=0)
+    rating = IntegerField(default=0)  # TODO remove this field
 
     @classmethod
     def get_comments_for_post(cls, post):
@@ -318,6 +308,7 @@ class Comment(db.db_wrapper.Model):
         comment_dict = model_to_dict(
             self,
             exclude=get_exclude() + [Comment.post])
+
         return comment_dict
 
 
@@ -430,6 +421,27 @@ class Vote(db.db_wrapper.Model):
     ], default=3)
     voter = ForeignKeyField(model=User)
     vote_value = IntegerField()
+
+    @classmethod
+    def add_votes_info(cls, model_dict, type, user):
+        model_dict['rating'] = Vote.select(
+                fn.SUM(Vote.vote_value).alias('rating')
+            ).where(
+                (Vote.target_id == model_dict['id']) &  # noqa: E712
+                (Vote.target_type == type)
+            ).first().rating or 0
+
+        if user is not None:
+            user_vote = Vote.get_or_none(
+                (Vote.target_id == model_dict['id']) &  # noqa: E712
+                (Vote.target_type == type) &  # noqa: E712
+                (Vote.voter == user)
+            )
+            model_dict['user_voted'] = user_vote.vote_value if user_vote else 0
+        else:
+            model_dict['user_voted'] = 0
+
+        return model_dict
 
     def to_json(self):
         return model_to_dict(self, exclude=get_exclude())

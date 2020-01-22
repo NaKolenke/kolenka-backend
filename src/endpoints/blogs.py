@@ -3,7 +3,7 @@ from flask import Blueprint, jsonify, request
 from playhouse.flask_utils import PaginatedQuery
 from src.auth import login_required, get_user_from_request
 from src.model.models import User, Blog, BlogParticipiation, Content, \
-    BlogInvite, Post, Notification
+    BlogInvite, Post, Notification, Vote
 from src import errors
 from src.utils import sanitize, doc_sample
 
@@ -18,9 +18,12 @@ def get_blogs():
     limit = max(1, min(int(request.args.get('limit') or 20), 100))
     paginated_query = PaginatedQuery(query, paginate_by=limit)
 
+    blogs = [b.to_json() for b in paginated_query.get_object_list()]
+    blogs = [Vote.add_votes_info(b, 2, get_user_from_request()) for b in blogs]
+
     return jsonify({
         'success': 1,
-        'blogs': [b.to_json() for b in paginated_query.get_object_list()],
+        'blogs': blogs,
         'meta': {
             'page_count': paginated_query.get_page_count()
         }
@@ -73,9 +76,11 @@ def get_single_blog(url):
     if not has_access:
         return errors.no_access()
 
+    blog_dict = blog.to_json()
+    blog_dict = Vote.add_votes_info(blog_dict, 2, user)
     return jsonify({
         'success': 1,
-        'blog': blog.to_json(),
+        'blog': blog_dict,
     })
 
 
@@ -139,9 +144,12 @@ def posts(url):
     limit = max(1, min(int(request.args.get('limit') or 20), 100))
     paginated_query = PaginatedQuery(query, paginate_by=limit)
 
+    posts = [p.to_json() for p in paginated_query.get_object_list()]
+    posts = [Vote.add_votes_info(p, 3, user) for p in posts]
+
     return jsonify({
         'success': 1,
-        'posts': [p.to_json(user=user) for p in paginated_query.get_object_list()],
+        'posts': posts,
         'meta': {
             'page_count': paginated_query.get_page_count()
         }

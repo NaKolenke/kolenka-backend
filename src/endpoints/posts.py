@@ -2,7 +2,7 @@ import datetime
 from flask import Blueprint, jsonify, request
 from playhouse.flask_utils import PaginatedQuery
 from src.auth import get_user_from_request, login_required
-from src.model.models import Post, Blog, Comment, Notification
+from src.model.models import Post, Blog, Comment, Notification, Vote
 from src import errors
 from src.utils import sanitize
 
@@ -22,8 +22,8 @@ def get_posts():
     limit = max(1, min(int(request.args.get('limit') or 20), 100))
     paginated_query = PaginatedQuery(query, paginate_by=limit)
 
-    posts = [p.to_json(user=get_user_from_request())
-             for p in paginated_query.get_object_list()]
+    posts = [p.to_json() for p in paginated_query.get_object_list()]
+    posts = [Vote.add_votes_info(p, 3, get_user_from_request()) for p in posts]
 
     return jsonify({
         'success': 1,
@@ -84,9 +84,12 @@ def get_post(url):
     if not has_access:
         return errors.no_access()
 
+    post_dict = post.to_json()
+    post_dict = Vote.add_votes_info(post_dict, 3, user)
+
     return jsonify({
         'success': 1,
-        'post': post.to_json(user=user),
+        'post': post_dict,
     })
 
 
@@ -162,8 +165,9 @@ def comments(url):
         return errors.not_found()
 
     if request.method == 'GET':
+        user = get_user_from_request()
         if post.is_draft:
-            user = get_user_from_request()
+
             if user is None:
                 return errors.no_access()
 
@@ -171,10 +175,12 @@ def comments(url):
                 return errors.no_access()
 
         query = Comment.get_comments_for_post(post)
+        comments = [c.to_json() for c in query]
+        comments = [Vote.add_votes_info(c, 4, user) for c in comments]
 
         return jsonify({
             'success': 1,
-            'comments': [c.to_json() for c in query],
+            'comments': comments,
         })
     elif request.method == 'POST':
         user = get_user_from_request()
@@ -206,13 +212,29 @@ def comments(url):
         )
 
         if user.id != post.creator.id:
+            notification_text = \
+                'Пользователь {0} оставил комментарий к вашему посту {1}: {2}'\
+                .format(user.name, post.title, text)
+
             Notification.create(
                 user=post.creator,
                 created_date=datetime.datetime.now(),
-                text='Пользователь {0} оставил комментарий к вашему посту {1}: {2}'
-                     .format(user.name, post.title, text),
+                text=notification_text,
                 object_type='comment',
                 object_id=comment.id)
+
+        if parent is not None:
+            if user.id != parent.creator.id:
+                notification_text = \
+                    'Пользователь {0} ответил на ваш комментарий {1}: {2}'\
+                    .format(user.name, parent.text, text)
+
+                Notification.create(
+                    user=parent.creator,
+                    created_date=datetime.datetime.now(),
+                    text=notification_text,
+                    object_type='comment',
+                    object_id=comment.id)
 
         return jsonify({
             'success': 1,

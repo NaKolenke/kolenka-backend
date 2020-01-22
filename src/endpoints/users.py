@@ -3,7 +3,7 @@ import hashlib
 from flask import current_app, Blueprint, request, jsonify
 from playhouse.flask_utils import PaginatedQuery
 from src.auth import login_required, get_user_from_request
-from src.model.models import User, Token, Content, Blog, Post
+from src.model.models import User, Token, Content, Blog, Post, Vote
 from src import errors
 from src.email import EmailSender
 from src.utils import sanitize, doc_sample
@@ -54,9 +54,12 @@ def user_blogs(username):
     limit = max(1, min(int(request.args.get('limit') or 20), 100))
     paginated_query = PaginatedQuery(query, paginate_by=limit)
 
+    blogs = [b.to_json() for b in paginated_query.get_object_list()]
+    blogs = [Vote.add_votes_info(b, 2, get_user_from_request()) for b in blogs]
+
     return jsonify({
         'success': 1,
-        'blogs': [b.to_json() for b in paginated_query.get_object_list()],
+        'blogs': blogs,
         'meta': {
             'page_count': paginated_query.get_page_count()
         }
@@ -75,10 +78,12 @@ def user_posts(username):
     limit = max(1, min(int(request.args.get('limit') or 20), 100))
     paginated_query = PaginatedQuery(query, paginate_by=limit)
 
+    posts = [p.to_json() for p in paginated_query.get_object_list()]
+    posts = [Vote.add_votes_info(p, 3, get_user_from_request()) for p in posts]
+
     return jsonify({
         'success': 1,
-        'posts': [p.to_json(user=get_user_from_request())
-                  for p in paginated_query.get_object_list()],
+        'posts': posts,
         'meta': {
             'page_count': paginated_query.get_page_count()
         }
@@ -95,9 +100,12 @@ def user_drafts():
     limit = max(1, min(int(request.args.get('limit') or 20), 100))
     paginated_query = PaginatedQuery(query, paginate_by=limit)
 
+    posts = [p.to_json() for p in paginated_query.get_object_list()]
+    posts = [Vote.add_votes_info(p, 3, get_user_from_request()) for p in posts]
+
     return jsonify({
         'success': 1,
-        'posts': [p.to_json() for p in paginated_query.get_object_list()],
+        'posts': posts,
         'meta': {
             'page_count': paginated_query.get_page_count()
         }
