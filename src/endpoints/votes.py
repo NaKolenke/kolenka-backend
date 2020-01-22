@@ -32,13 +32,13 @@ def vote():
     notification_object_type = ''
 
     if json['target_type'] == 'user':
-        user = User.get_or_none(User.id == t_id)
-        if user is None:
+        user_to = User.get_or_none(User.id == t_id)
+        if user_to is None:
             return errors.vote_no_target()
         t_type = 1
 
         notification_str_type = 'профиль'
-        notification_to_whom = user
+        notification_to_whom = user_to
         notification_object_type = 'user'
 
     elif json['target_type'] == 'blog':
