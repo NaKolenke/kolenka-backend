@@ -15,6 +15,18 @@ def replace_sticker(text):
         items = re.findall(pattern, text)
         for i in items:
             stickers_set.add(i)
+        text = re.sub(pattern, r':\1:', text)
+
+        pattern = r'<img src="\/common\/templates\/skin\/start-kit\/assets\/images\/(.*?)\..*?" />'
+        items = re.findall(pattern, text)
+        for i in items:
+            stickers_set.add(i)
+        text = re.sub(pattern, r':\1:', text)
+
+        pattern = r'<img src="http:\/\/k.faisu.net\/kreguzda\/images\/smilies\/(.*?)\..*?" />'
+        items = re.findall(pattern, text)
+        for i in items:
+            stickers_set.add(i)
         return re.sub(pattern, r':\1:', text)
     return None
 
