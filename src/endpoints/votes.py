@@ -26,6 +26,7 @@ def vote():
 
     t_id = json['target_id']
     t_type = 0
+
     notification_str_type = ''
     notification_to_whom = None
     notification_object_type = ''

@@ -19,9 +19,12 @@ def users():
     limit = max(1, min(int(request.args.get('limit') or 20), 100))
     paginated_query = PaginatedQuery(query, paginate_by=limit)
 
+    users = [u.to_json() for u in paginated_query.get_object_list()]
+    users = [Vote.add_votes_info(u, 1, get_user_from_request()) for u in users]
+
     return jsonify({
         'success': 1,
-        'users': [u.to_json() for u in paginated_query.get_object_list()],
+        'users': users,
         'meta': {
             'page_count': paginated_query.get_page_count()
         }
@@ -36,9 +39,12 @@ def user(username):
     if user is None:
         return errors.not_found()
 
+    user_dict = user.to_json()
+    user_dict = Vote.add_votes_info(user_dict, 1, get_user_from_request())
+
     return jsonify({
         'success': 1,
-        'user': user.to_json(),
+        'user': user_dict,
     })
 
 
