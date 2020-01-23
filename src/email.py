@@ -27,7 +27,7 @@ class EmailSender():
     def recover_pass(self, url, user):
         a_url = '<a href="' + url + '">Восстановить пароль</a>'
 
-        hello_text = 'Привет, ' + user.name
+        hello_text = 'Привет, ' + user.visible_name
         recover_text = \
             'Кто-то запросил восстановление пароля для вашего аккаунта. ' + \
             'Ссылка для установки нового пароля: '

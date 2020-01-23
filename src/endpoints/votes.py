@@ -101,7 +101,7 @@ def vote():
     notification_str_val = '+1' if value > 0 else '-1'
     notification_text = \
         '{0}: Пользователь {1} оценил ваш {2}'\
-        .format(notification_str_val, user.name, notification_str_type)
+        .format(notification_str_val, user.visible_name, notification_str_type)
 
     Notification.create(
         user=notification_to_whom,

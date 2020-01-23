@@ -214,7 +214,7 @@ def comments(url):
         if user.id != post.creator.id:
             notification_text = \
                 'Пользователь {0} оставил комментарий к вашему посту {1}: {2}'\
-                .format(user.name, post.title, text)
+                .format(user.visible_name, post.title, text)
 
             Notification.create(
                 user=post.creator,
@@ -227,7 +227,7 @@ def comments(url):
             if user.id != parent.creator.id:
                 notification_text = \
                     'Пользователь {0} ответил на ваш комментарий {1}: {2}'\
-                    .format(user.name, parent.text, text)
+                    .format(user.visible_name, parent.text, text)
 
                 Notification.create(
                     user=parent.creator,

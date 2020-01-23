@@ -60,6 +60,20 @@ class User(db.db_wrapper.Model):
 
     avatar = ForeignKeyField(model=Content, backref='avatar', null=True)
 
+    @classmethod
+    def get_admins(cls):
+        return cls.select().where(User.is_admin == True)  # noqa E712
+
+    @classmethod
+    def get_users_sorted_by_active_date(cls):
+        return cls.select().order_by(User.last_active_date.desc())
+
+    @property
+    def visible_name(self):
+        if self.name is not None and len(self.name) > 0:
+            return self.name
+        return self.username
+
     def to_json(self):
         user_dict = model_to_dict(self, exclude=get_exclude())
 
@@ -68,14 +82,6 @@ class User(db.db_wrapper.Model):
     def to_json_with_email(self):
         user_dict = model_to_dict(self, exclude=[User.password, Content.user])
         return user_dict
-
-    @classmethod
-    def get_admins(cls):
-        return cls.select().where(User.is_admin == True)  # noqa E712
-
-    @classmethod
-    def get_users_sorted_by_active_date(cls):
-        return cls.select().order_by(User.last_active_date.desc())
 
 
 class Token(db.db_wrapper.Model):
