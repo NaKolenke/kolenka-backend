@@ -13,3 +13,7 @@ def test_sanitize():
     html = 'http://veloc1.me'
     new_html = sanitize(html)
     assert new_html == '<a href="http://veloc1.me" rel="nofollow">http://veloc1.me</a>'
+
+    html = '<p>Some text</p><cut></cut>'
+    new_html = sanitize(html)
+    assert new_html == '<p>Some text</p><cut></cut>'

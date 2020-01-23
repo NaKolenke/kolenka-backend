@@ -1,6 +1,7 @@
 import functools
 from datetime import date, datetime, timezone
 import bleach
+from bleach.linkifier import Linker
 from flask.json import JSONEncoder
 
 allowed_tags = bleach.ALLOWED_TAGS + \
@@ -26,11 +27,12 @@ def sanitize(html):
 
     ret = bleach.clean(
         html,
-        allowed_tags,
-        allowed_attrs,
-        allowed_styles,
+        tags=allowed_tags,
+        attributes=allowed_attrs,
+        styles=allowed_styles,
         strip=True)
-    ret = bleach.linkify(ret)
+    linker = Linker(recognized_tags=allowed_tags)
+    ret = linker.linkify(ret)
     return ret
 
 
