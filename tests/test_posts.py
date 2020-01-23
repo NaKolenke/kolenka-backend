@@ -156,6 +156,22 @@ def test_edit_post(client, post, user_token):
     assert Post.get().title == 'new title', 'Post title not chaged'
 
 
+def test_edit_post_with_cut(client, post, user_token):
+    rv = client.put(
+        '/posts/' + post.url + '/',
+        json={
+            'text': '<p>Some text</p><cut name="it\'s cut"></cut><p>More text</p>"',
+        },
+        headers={
+            'Authorization': user_token[1].token
+        })
+    assert rv.json['success'] == 1
+
+    assert Post.get().cut_text == '<p>Some text</p>'
+    assert Post.get().cut_name == 'it\'s cut'
+    assert Post.get().text == '<p>Some text</p><cut name="it\'s cut"></cut><p>More text</p>"'
+
+
 def test_edit_post_wrong_user(client, post, user_not_in_blog_with_token):
     rv = client.put(
         '/posts/' + post.url + '/',

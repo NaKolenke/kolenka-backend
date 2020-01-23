@@ -1,4 +1,5 @@
 import datetime
+import re
 from flask import Blueprint, jsonify, request
 from playhouse.flask_utils import PaginatedQuery
 from src.auth import get_user_from_request, login_required
@@ -247,9 +248,10 @@ def fill_post_from_json(post, json):
         post.title = json.get('title', post.title)
         post.text = sanitize(json.get('text', post.text))
 
-        post.has_cut = '<cut>' in post.text
-        post.cut_text = post.text.split('<cut>')[0]
-        post.cut_name = json.get('cut_name', post.cut_name)
+        cut_info = process_cut(post.text)
+        post.has_cut = cut_info['has_cut']
+        post.cut_text = cut_info['text_before_cut']
+        post.cut_name = cut_info['cut_name']
 
         post.is_draft = json.get('is_draft', post.is_draft)
         post.url = json.get('url', post.url)
@@ -274,3 +276,24 @@ def set_blog(post, json, user):
                         return BlogError.NoAccess
             else:
                 return BlogError.NoBlog
+
+
+def process_cut(post):
+    has_simple_cut = '<cut>' in post or '<cut/>' in post
+    has_named_cut = '<cut name="' in post
+
+    cut_name = ''
+    text_before_cut = post
+    if has_simple_cut:
+        text_before_cut = post[0:post.find('<cut>')]
+    elif has_named_cut:
+        text_before_cut = post[0:post.find('<cut ')]
+        m = re.search('<cut name="([a-zA-Zа-яА-Я0-9 -_,.\']*)">', post)
+        print(m)
+        cut_name = m.group(1)
+
+    return {
+        'has_cut': has_named_cut or has_simple_cut,
+        'cut_name': cut_name if has_named_cut else '',
+        'text_before_cut': text_before_cut
+    }
