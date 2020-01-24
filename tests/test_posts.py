@@ -133,6 +133,9 @@ def test_create_post(client, user_token):
         '/posts/',
         headers={
             'Authorization': user_token[1].token
+        },
+        json={
+            'url': 'sample-url'
         })
     assert rv.json['success'] == 1
     assert 'post' in rv.json, 'No post in response'

@@ -114,11 +114,12 @@ def edit_post(url):
     if post.creator == user or role == 1:
         json = request.get_json()
 
-        url = json['url']
-        if url != post.url:
-            # validate, that there is no posts with new url
-            if Post.get_or_none(Post.url == url) is not None:
-                return errors.post_url_already_taken()
+        if 'url' in json:
+            url = json['url']
+            if url != post.url:
+                # validate, that there is no posts with new url
+                if Post.get_or_none(Post.url == url) is not None:
+                    return errors.post_url_already_taken()
 
         fill_post_from_json(post, json)
         error = set_blog(post, json, user)
@@ -260,10 +261,11 @@ def fill_post_from_json(post, json):
         post.title = json.get('title', post.title)
         post.text = sanitize(json.get('text', post.text))
 
-        cut_info = process_cut(post.text)
-        post.has_cut = cut_info['has_cut']
-        post.cut_text = cut_info['text_before_cut']
-        post.cut_name = cut_info['cut_name']
+        if post.text is not None:
+            cut_info = process_cut(post.text)
+            post.has_cut = cut_info['has_cut']
+            post.cut_text = cut_info['text_before_cut']
+            post.cut_name = cut_info['cut_name']
 
         post.is_draft = json.get('is_draft', post.is_draft)
         post.url = json.get('url', post.url)
