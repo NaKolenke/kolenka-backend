@@ -288,7 +288,7 @@ def process_cut(post):
         text_before_cut = post[0:post.find('<cut>')]
     elif has_named_cut:
         text_before_cut = post[0:post.find('<cut ')]
-        m = re.search('<cut name="([a-zA-Zа-яА-Я0-9 -_,.\']*)">', post)
+        m = re.search('<cut name="([a-zA-Zа-яА-Я0-9 -_,.!?\']*)">', post)
         print(m)
         cut_name = m.group(1)
 
