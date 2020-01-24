@@ -48,6 +48,11 @@ def create_post():
     )
 
     json = request.get_json()
+
+    url = json['url']
+    if Post.get_or_none(Post.url == url) is not None:
+        return errors.post_url_already_taken()
+
     fill_post_from_json(post, json)
     error = set_blog(post, json, user)
     if error is not None:
@@ -108,6 +113,13 @@ def edit_post(url):
 
     if post.creator == user or role == 1:
         json = request.get_json()
+
+        url = json['url']
+        if url != post.url:
+            # validate, that there is no posts with new url
+            if Post.get_or_none(Post.url == url) is not None:
+                return errors.post_url_already_taken()
+
         fill_post_from_json(post, json)
         error = set_blog(post, json, user)
         if error is not None:
@@ -288,7 +300,7 @@ def process_cut(post):
         text_before_cut = post[0:post.find('<cut>')]
     elif has_named_cut:
         text_before_cut = post[0:post.find('<cut ')]
-        m = re.search('<cut name="([a-zA-Zа-яА-Я0-9 -_,.!?\']*)">', post)
+        m = re.search(r'<cut name="([a-zA-Zа-яА-Я0-9 \-_,.!?\']*)">', post)
         print(m)
         cut_name = m.group(1)
 
