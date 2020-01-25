@@ -318,11 +318,21 @@ def set_blog(post, json, user):
         if 'blog' in json:
             blog = Blog.get_or_none(Blog.id == json['blog'])
             if blog is not None:
+                # admin can save to any blog
+                if user.is_admin:
+                    post.blog = blog
+                    return
+
                 role = Blog.get_user_role(blog, user)
+
+                # if user not in blog - then he can't save post here
                 if role is None:
                     return BlogError.NoAccess
+                # if blog is open - anyone can post here
                 if blog.blog_type == 1:
                     post.blog = blog
+                # if blog is closed or hidden - only writers and admins can
+                # save posts here
                 elif blog.blog_type == 2 or blog.blog_type == 3:
                     if role < 3:
                         post.blog = blog
