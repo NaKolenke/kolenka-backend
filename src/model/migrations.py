@@ -72,11 +72,22 @@ def migration_v4(db, migrator: SchemaMigrator):
         t.save()
 
 
+def migration_v5(db, migrator: SchemaMigrator):
+    print('Applying migration v5')
+
+    with db.atomic():
+        migrate(
+            migrator.drop_column('post', 'rating'),
+            migrator.drop_column('comment', 'rating'),
+        )
+
+
 migrations = [
     migration_v1,
     migration_v2,
     migration_v3,
     migration_v4,
+    migration_v5,
 ]
 
 

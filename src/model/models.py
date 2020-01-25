@@ -240,7 +240,6 @@ class Post(db.db_wrapper.Model):
     title = TextField(null=True)
     cut_text = TextField(null=True)
     text = TextField(null=True)
-    rating = IntegerField(default=0)
     is_draft = BooleanField(default=True)
     is_on_main = BooleanField(default=False)
     reads = IntegerField(default=0)
@@ -301,7 +300,6 @@ class Comment(db.db_wrapper.Model):
     created_date = DateTimeField()
     updated_date = DateTimeField()
     text = TextField()
-    rating = IntegerField(default=0)  # TODO remove this field
 
     @classmethod
     def get_comments_for_post(cls, post):

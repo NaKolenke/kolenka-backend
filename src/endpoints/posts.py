@@ -3,7 +3,8 @@ import re
 from flask import Blueprint, jsonify, request
 from playhouse.flask_utils import PaginatedQuery
 from src.auth import get_user_from_request, login_required
-from src.model.models import Post, Blog, Comment, Notification, Vote
+from src.model.models import Post, Blog, Comment, Notification, Vote, Tag, \
+    TagMark
 from src import errors
 from src.utils import sanitize
 
@@ -190,6 +191,8 @@ def _delete_post(post):
     user = get_user_from_request()
 
     if post.creator == user or user.is_admin:
+        Comment.delete().where(Comment.post == post).execute()
+        TagMark.delete().where(TagMark.post == post).execute()
         post.delete_instance()
 
         return jsonify({
@@ -204,6 +207,8 @@ def _delete_post(post):
     if role != 1:
         return errors.no_access()
 
+    Comment.delete().where(Comment.post == post).execute()
+    TagMark.delete().where(TagMark.post == post).execute()
     post.delete_instance()
 
     return jsonify({
@@ -309,6 +314,14 @@ def fill_post_from_json(post, json):
 
         post.is_draft = json.get('is_draft', post.is_draft)
         post.url = json.get('url', post.url)
+
+        tags = json.get('tags', [])
+        TagMark.delete().where(TagMark.post == post).execute()
+        for t in tags:
+            tag = Tag.get_or_none(Tag.title == t)
+            if tag is None:
+                tag = Tag.create(title=t, created_date=datetime.datetime.now())
+            TagMark.create(tag=tag, post=post)
 
     post.updated_date = datetime.datetime.now()
 
