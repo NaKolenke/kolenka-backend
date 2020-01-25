@@ -192,6 +192,9 @@ class Blog(db.db_wrapper.Model):
 
     @classmethod
     def has_access(cls, blog, user):
+        if user is not None and user.is_admin:
+            return True
+
         if blog.blog_type == 3:
             if user is None:
                 return False

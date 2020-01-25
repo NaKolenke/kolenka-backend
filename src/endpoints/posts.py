@@ -74,6 +74,17 @@ def create_post():
 def get_post(url):
     '''Получить пост по url'''
     post = Post.get_or_none(Post.url == url)
+    return _get_post(post)
+
+
+@bp.route("/by-id/<id>/", methods=['GET'])
+def get_post_by_id(id):
+    '''Получить пост по id'''
+    post = Post.get_or_none(Post.id == id)
+    return _get_post(post)
+
+
+def _get_post(post):
     if post is None:
         return errors.not_found()
 
@@ -86,9 +97,13 @@ def get_post(url):
             return errors.no_access()
 
     user = get_user_from_request()
-    has_access = Blog.has_access(post.blog, user)
-    if not has_access:
-        return errors.no_access()
+
+    if post.blog is not None:
+        # workaround, delete later. Sometime in the past you can save post
+        # without blog, so this check will fail.
+        has_access = Blog.has_access(post.blog, user)
+        if not has_access:
+            return errors.no_access()
 
     post_dict = post.to_json()
     post_dict = Vote.add_votes_info(post_dict, 3, user)
@@ -104,6 +119,18 @@ def get_post(url):
 def edit_post(url):
     '''Изменить пост'''
     post = Post.get_or_none(Post.url == url)
+    return _edit_post(post)
+
+
+@bp.route("/by-id/<id>/", methods=['PUT'])
+@login_required
+def edit_post_by_id(id):
+    '''Изменить пост'''
+    post = Post.get_or_none(Post.id == id)
+    return _edit_post(post)
+
+
+def _edit_post(post):
     if post is None:
         return errors.not_found()
 
@@ -111,7 +138,7 @@ def edit_post(url):
 
     role = Blog.get_user_role(post.blog, user)
 
-    if post.creator == user or role == 1:
+    if post.creator == user or role == 1 or user.is_admin:
         json = request.get_json()
 
         if 'url' in json:
@@ -145,12 +172,24 @@ def edit_post(url):
 def delete_post(url):
     '''Удалить пост'''
     post = Post.get_or_none(Post.url == url)
+    return _delete_post(post)
+
+
+@bp.route("/by-id/<id>/", methods=['DELETE'])
+@login_required
+def delete_post_by_id(id):
+    '''Удалить пост'''
+    post = Post.get_or_none(Post.id == id)
+    return _delete_post(post)
+
+
+def _delete_post(post):
     if post is None:
         return errors.not_found()
 
     user = get_user_from_request()
 
-    if post.creator == user:
+    if post.creator == user or user.is_admin:
         post.delete_instance()
 
         return jsonify({
@@ -161,6 +200,7 @@ def delete_post(url):
         return errors.no_access()
 
     role = Blog.get_user_role(post.blog, user)
+    # only blog owner can delete posts
     if role != 1:
         return errors.no_access()
 
