@@ -3,22 +3,22 @@ from flask import Blueprint, request, jsonify
 from src.model.models import Token
 from src import errors
 
-bp = Blueprint('tokens', __name__, url_prefix='/token/')
+bp = Blueprint("tokens", __name__, url_prefix="/token/")
 
 
-@bp.route("/validate/", methods=['POST'])
+@bp.route("/validate/", methods=["POST"])
 def valid():
-    '''Проверить, валиден ли токен'''
+    """Проверить, валиден ли токен"""
     json = request.get_json()
 
-    if 'token' not in json:
-        return errors.wrong_payload('token')
+    if "token" not in json:
+        return errors.wrong_payload("token")
 
-    token = json['token']
+    token = json["token"]
 
     actual_token = Token.get_or_none(
-        (Token.token == token) &
-        (Token.token_type == 'access'))
+        (Token.token == token) & (Token.token_type == "access")
+    )
 
     if actual_token is None:
         return errors.token_invalid()
@@ -26,24 +26,22 @@ def valid():
     if actual_token.valid_until < datetime.datetime.now():
         return errors.token_outdated()
 
-    return jsonify({
-            'success': 1
-        })
+    return jsonify({"success": 1})
 
 
-@bp.route("/refresh/", methods=['POST'])
+@bp.route("/refresh/", methods=["POST"])
 def refresh():
-    '''Обновить токен'''
+    """Обновить токен"""
     json = request.get_json()
 
-    if 'token' not in json:
-        return errors.wrong_payload('token')
+    if "token" not in json:
+        return errors.wrong_payload("token")
 
-    token = json['token']
+    token = json["token"]
 
     actual_token = Token.get_or_none(
-        (Token.token == token) &
-        (Token.token_type == 'refresh'))
+        (Token.token == token) & (Token.token_type == "refresh")
+    )
 
     if actual_token is None:
         return errors.token_invalid()
@@ -56,14 +54,16 @@ def refresh():
     token = Token.generate_access_token(user)
     refresh_token = Token.generate_refresh_token(user)
 
-    return jsonify({
-            'success': 1,
-            'access_token': {
-                'token': token.token,
-                'valid_until': token.valid_until.timestamp(),
+    return jsonify(
+        {
+            "success": 1,
+            "access_token": {
+                "token": token.token,
+                "valid_until": token.valid_until.timestamp(),
             },
-            'refresh_token': {
-                'token': refresh_token.token,
-                'valid_until': refresh_token.valid_until.timestamp(),
-            }
-        })
+            "refresh_token": {
+                "token": refresh_token.token,
+                "valid_until": refresh_token.valid_until.timestamp(),
+            },
+        }
+    )

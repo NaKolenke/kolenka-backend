@@ -8,7 +8,7 @@ from src import errors
 def login_required(f):
     @functools.wraps(f)
     def decorated_function(**kwargs):
-        if 'Authorization' not in request.headers:
+        if "Authorization" not in request.headers:
             return errors.not_authorized()
         else:
             is_valid = False
@@ -26,12 +26,12 @@ def login_required(f):
 
 
 def get_token_from_request():
-    if 'Authorization' not in request.headers:
+    if "Authorization" not in request.headers:
         return None
-    token = request.headers['Authorization']
+    token = request.headers["Authorization"]
     actual_token = Token.get_or_none(
-        (Token.token == token) &
-        (Token.token_type == 'access'))
+        (Token.token == token) & (Token.token_type == "access")
+    )
     return actual_token
 
 

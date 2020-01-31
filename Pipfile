@@ -14,10 +14,11 @@ python-magic = "*"
 
 [dev-packages]
 pytest = "*"
-pylint = "*"
-"autopep8" = "*"
 pytest-cov = "*"
-pytest-mock = "*"
+black = "*"
 
 [requires]
 python_version = "3.7"
+
+[pipenv]
+allow_prereleases = true

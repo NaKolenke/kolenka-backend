@@ -9,29 +9,28 @@ from src.model.models import Content
 from src import errors
 
 
-bp = Blueprint('content', __name__, url_prefix='/content/')
+bp = Blueprint("content", __name__, url_prefix="/content/")
 
-ALLOWED_EXTENSIONS = set(['txt', 'pdf', 'png', 'jpg', 'jpeg', 'gif'])
+ALLOWED_EXTENSIONS = set(["txt", "pdf", "png", "jpg", "jpeg", "gif"])
 MAX_FILE_SIZE = 10 * 1024 * 1024  # bytes, 10mb
 
 
 def allowed_file(filename):
-    return '.' in filename and \
-           filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+    return "." in filename and filename.rsplit(".", 1)[1].lower() in ALLOWED_EXTENSIONS
 
 
-@bp.route('/', methods=['POST'])
+@bp.route("/", methods=["POST"])
 @login_required
 def upload():
-    '''Загрузить файл'''
+    """Загрузить файл"""
 
     import magic
 
-    if 'file' not in request.files:
+    if "file" not in request.files:
         return errors.content_no_file()
 
-    uploaded_file = request.files['file']
-    if uploaded_file.filename == '':
+    uploaded_file = request.files["file"]
+    if uploaded_file.filename == "":
         return errors.content_no_file()
 
     if not allowed_file(uploaded_file.filename):
@@ -54,10 +53,9 @@ def upload():
     user = get_user_from_request()
 
     filename = os.path.join(
-        current_app.config['UPLOAD_FOLDER'],
-        str(user.id) + '/' +
-        str(today.year) + '/' +
-        str(today.month) + '/')
+        current_app.config["UPLOAD_FOLDER"],
+        str(user.id) + "/" + str(today.year) + "/" + str(today.month) + "/",
+    )
 
     os.makedirs(filename, exist_ok=True)
 
@@ -68,37 +66,30 @@ def upload():
 
     mime = magic.from_file(full_path, mime=True)
 
-    content = Content.create(
-        user=user.id,
-        path=full_path,
-        size=size,
-        mime=mime)
+    content = Content.create(user=user.id, path=full_path, size=size, mime=mime)
 
-    return jsonify({
-        'success': 1,
-        'file': content.to_json()
-    })
+    return jsonify({"success": 1, "file": content.to_json()})
 
 
-@bp.route('/owned/', methods=['GET'])
+@bp.route("/owned/", methods=["GET"])
 @login_required
 def get_owned():
     query = Content.get_user_files(get_user_from_request())
-    limit = max(1, min(int(request.args.get('limit') or 20), 100))
+    limit = max(1, min(int(request.args.get("limit") or 20), 100))
     paginated = PaginatedQuery(query, paginate_by=limit)
 
-    return jsonify({
-        'success': 1,
-        'files': [p.to_json() for p in paginated.get_object_list()],
-        'meta': {
-            'page_count': paginated.get_page_count()
+    return jsonify(
+        {
+            "success": 1,
+            "files": [p.to_json() for p in paginated.get_object_list()],
+            "meta": {"page_count": paginated.get_page_count()},
         }
-    })
+    )
 
 
-@bp.route('/<id>/', methods=['GET'])
+@bp.route("/<id>/", methods=["GET"])
 def get(id):
-    '''Получить файл по id'''
+    """Получить файл по id"""
     content = Content.get_or_none(Content.id == id)
     if content is not None:
         return send_file(content.path)

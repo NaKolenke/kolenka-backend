@@ -5,13 +5,13 @@ from src.model.models import User
 from src import errors
 
 
-bp = Blueprint('admin', __name__, url_prefix='/admin/')
+bp = Blueprint("admin", __name__, url_prefix="/admin/")
 
 
-@bp.route("/", methods=['GET'])
+@bp.route("/", methods=["GET"])
 @login_required
 def dashboard():
-    '''Получить статистику по сайту'''
+    """Получить статистику по сайту"""
     user = get_user_from_request()
 
     if not user.is_admin:
@@ -21,8 +21,4 @@ def dashboard():
 
     d = datetime.datetime.now() - datetime.timedelta(days=7)
     active_users = User.select().where(User.last_active_date > d).count()
-    return jsonify({
-        'success': 1,
-        'users': users,
-        'active_users_7_days': active_users,
-    })
+    return jsonify({"success": 1, "users": users, "active_users_7_days": active_users})
