@@ -1,0 +1,25 @@
+digraph G {
+    Jam -> Creator
+
+    Jam -> Blog
+    
+    Jam -> Entry
+    Entry -> Jam
+    Entry -> Team
+    Team -> TeamMember
+
+    Jam -> Dates
+
+    Jam -> Results -> Criteria
+    Results -> Feedback
+
+    Jam -> Logo
+
+    Entry -> Post
+    Entry -> Image
+    Post -> Entry
+    Post -> Blog
+
+    Post -> Rating
+    Rating -> User
+}
