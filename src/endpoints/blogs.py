@@ -253,14 +253,6 @@ def join(url):
     if BlogParticipiation.get_or_none(blog=blog, user=user) is None:
         BlogParticipiation.create(blog=blog, user=user, role=3)
 
-    Notification.create(
-        user=user,
-        created_date=datetime.datetime.now(),
-        text='Вы присоединились к блогу "{0}"'.format(blog.title),
-        object_type="blog",
-        object_id=blog.id,
-    )
-
     return jsonify({"success": 1})
 
 

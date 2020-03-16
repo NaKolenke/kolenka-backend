@@ -24,6 +24,16 @@ def dashboard():
     return jsonify({"success": 1, "users": users, "active_users_7_days": active_users})
 
 
+@bp.route("/achievements", methods=["GET"])
+def get_achievements():
+    """Получить список наград"""
+    achievements = Achievement.select()
+
+    achievements = [a.to_json() for a in achievements]
+
+    return jsonify({"success": 1, "achievements": achievements})
+
+
 @bp.route("/achievements/", methods=["POST"])
 @login_required
 def add_achievement():
@@ -78,6 +88,40 @@ def assign_achievement():
         if user is None:
             assign_errors.append(f"Cannot assign achievement to user {u}")
         else:
-            AchievementUser.create(achievement=achievement, user=user)
+            AchievementUser.create(
+                achievement=achievement, user=user, comment=json.get("comment", None)
+            )
+
+    return jsonify({"success": 1, "errors": assign_errors})
+
+
+@bp.route("/achievements/unassign", methods=["POST"])
+@login_required
+def unassign_achievement():
+    user = get_user_from_request()
+
+    if not user.is_admin:
+        return errors.no_access()
+
+    json = request.get_json()
+
+    if "users" not in json or "achievement" not in json:
+        return errors.wrong_payload("users", "achievement")
+
+    if len(json["users"]) == 0:
+        return errors.wrong_payload("users")
+
+    achievement = Achievement.get_or_none(Achievement.id == json["achievement"])
+    if achievement is None:
+        return errors.wrong_payload("achievement")
+
+    assign_errors = []
+    for u in json["users"]:
+        user = User.get_or_none(user.id == u)
+        if user is None:
+            assign_errors.append(f"Cannot unassign achievement from user {u}")
+        else:
+            assign = AchievementUser.get_or_none(achievement=achievement, user=user)
+            assign.delete_instance()
 
     return jsonify({"success": 1, "errors": assign_errors})
