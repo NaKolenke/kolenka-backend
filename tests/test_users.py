@@ -78,7 +78,7 @@ def blog(user):
 @pytest.fixture
 def achievement(user):
     achievement = Achievement.create(title="test achievement", image=None)
-    AchievementUser.create(achievement=achievement, user=user)
+    AchievementUser.create(achievement=achievement, user=user, comment="some comment")
 
     from src.model import db
 
@@ -144,6 +144,7 @@ def test_user(client, user, achievement):
 
     assert "achievements" in rv.json["user"]
     assert rv.json["user"]["achievements"][0]["title"] == achievement.title
+    assert rv.json["user"]["achievements"][0]["comment"] == "some comment"
 
 
 def test_wrong_user(client, user):

@@ -537,11 +537,19 @@ class Achievement(db.db_wrapper.Model):
     @classmethod
     def add_achievements(cls, user_dict):
         achievements = (
-            Achievement.select(Achievement)
+            Achievement.select(Achievement, AchievementUser.comment)
             .join(AchievementUser, JOIN.LEFT_OUTER)
             .where(AchievementUser.user == user_dict["id"])
         )
-        user_dict["achievements"] = [a.to_json() for a in achievements]
+
+        json_achivements = []
+        for a in achievements:
+            _a = a.to_json()
+            _a["comment"] = a.achievementuser.comment
+            json_achivements.append(_a)
+
+        user_dict["achievements"] = json_achivements
+
         return user_dict
 
     def to_json(self):
