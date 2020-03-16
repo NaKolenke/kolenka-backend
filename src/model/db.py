@@ -36,6 +36,8 @@ def create_tables():
         JamEntryFeedback,
         JamEntryPost,
         JamEntryVote,
+        Achievement,
+        AchievementUser,
     )
 
     db_wrapper.database.create_tables(
@@ -64,6 +66,8 @@ def create_tables():
             JamEntryFeedback,
             JamEntryPost,
             JamEntryVote,
+            Achievement,
+            AchievementUser,
         ]
     )
 

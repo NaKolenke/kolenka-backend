@@ -112,3 +112,10 @@ def vote_no_target():
 def vote_no_target_type():
     return prepare_error(91, "Invalid target type", 400)
 
+
+def achievement_is_not_image():
+    return prepare_error(100, "Achievement image is not an image", 400)
+
+
+def achievement_too_large():
+    return prepare_error(101, "Achievement image is too large", 400)

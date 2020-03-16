@@ -3,7 +3,7 @@ import hashlib
 from flask import current_app, Blueprint, request, jsonify
 from playhouse.flask_utils import PaginatedQuery
 from src.auth import login_required, get_user_from_request
-from src.model.models import User, Token, Content, Blog, Post, Vote
+from src.model.models import User, Token, Content, Blog, Post, Vote, Achievement
 from src import errors
 from src.email import EmailSender
 from src.utils import sanitize, doc_sample
@@ -41,6 +41,7 @@ def user(username):
 
     user_dict = user.to_json()
     user_dict = Vote.add_votes_info(user_dict, 1, get_user_from_request())
+    user_dict = Achievement.add_achievements(user_dict)
 
     return jsonify({"success": 1, "user": user_dict})
 

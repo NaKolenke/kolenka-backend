@@ -1,6 +1,14 @@
 import datetime
 import pytest
-from src.model.models import User, Token, Content, Blog, BlogParticipiation
+from src.model.models import (
+    User,
+    Token,
+    Content,
+    Blog,
+    BlogParticipiation,
+    AchievementUser,
+    Achievement,
+)
 
 
 def validate_tokens(json):
@@ -68,6 +76,18 @@ def blog(user):
 
 
 @pytest.fixture
+def achievement(user):
+    achievement = Achievement.create(title="test achievement", image=None)
+    AchievementUser.create(achievement=achievement, user=user)
+
+    from src.model import db
+
+    db.db_wrapper.database.close()
+
+    return achievement
+
+
+@pytest.fixture
 def users():
     for i in range(30):
         User.create(
@@ -93,6 +113,8 @@ def test_users(client, user):
     assert rv.json["users"][0]["username"] == "test_user", "With name test_user"
     assert rv.json["meta"]["page_count"] == 1, "There should be one page"
 
+    assert "achievements" not in rv.json["users"][0]
+
 
 def test_users_pagination(client, users):
     rv = client.get("/users/")
@@ -115,10 +137,13 @@ def test_empty_users(client):
     assert rv.json["meta"]["page_count"] == 0, "There should be no pages"
 
 
-def test_user(client, user):
+def test_user(client, user, achievement):
     rv = client.get("/users/" + str(user.username) + "/")
     assert rv.json["success"] == 1
     assert rv.json["user"]["username"] == "test_user", "With name test_user"
+
+    assert "achievements" in rv.json["user"]
+    assert rv.json["user"]["achievements"][0]["title"] == achievement.title
 
 
 def test_wrong_user(client, user):

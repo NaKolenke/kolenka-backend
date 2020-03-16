@@ -226,9 +226,7 @@ class Blog(db.db_wrapper.Model):
 class BlogParticipiation(db.db_wrapper.Model):
     blog = ForeignKeyField(model=Blog)
     user = ForeignKeyField(model=User)
-    role = IntegerField(
-        choices=[(1, "owner"), (2, "writer"), (3, "reader")], default=1
-    )
+    role = IntegerField(choices=[(1, "owner"), (2, "writer"), (3, "reader")], default=1)
 
 
 class BlogInvite(db.db_wrapper.Model):
@@ -236,9 +234,7 @@ class BlogInvite(db.db_wrapper.Model):
     user_from = ForeignKeyField(model=User)
     user_to = ForeignKeyField(model=User)
     is_accepted = BooleanField(default=False)
-    role = IntegerField(
-        choices=[(1, "owner"), (2, "writer"), (3, "reader")], default=1
-    )
+    role = IntegerField(choices=[(1, "owner"), (2, "writer"), (3, "reader")], default=1)
 
 
 class Post(db.db_wrapper.Model):
@@ -441,7 +437,7 @@ class Sticker(db.db_wrapper.Model):
     file = ForeignKeyField(model=Content)
 
     def to_json(self):
-        return model_to_dict(self, exclude=[Content.user])
+        return model_to_dict(self, exclude=get_exclude())
 
 
 class Vote(db.db_wrapper.Model):
@@ -532,3 +528,27 @@ class JamEntryFeedback(db.db_wrapper.Model):
     entry = ForeignKeyField(model=JamEntry)
     voter = ForeignKeyField(model=User)
     feedback = TextField()
+
+
+class Achievement(db.db_wrapper.Model):
+    title = TextField(null=True, default=None)
+    image = ForeignKeyField(model=Content, backref="image", null=True)
+
+    @classmethod
+    def add_achievements(cls, user_dict):
+        achievements = (
+            Achievement.select(Achievement)
+            .join(AchievementUser, JOIN.LEFT_OUTER)
+            .where(AchievementUser.user == user_dict["id"])
+        )
+        user_dict["achievements"] = [a.to_json() for a in achievements]
+        return user_dict
+
+    def to_json(self):
+        return model_to_dict(self, exclude=get_exclude())
+
+
+class AchievementUser(db.db_wrapper.Model):
+    achievement = ForeignKeyField(model=Achievement)
+    user = ForeignKeyField(model=User)
+    comment = TextField(null=True, default=None)

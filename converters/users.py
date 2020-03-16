@@ -1,5 +1,5 @@
 import datetime
-from converters.models import TuUser, TuSession, TuMresource
+from converters.models import TuUser, TuSession
 from converters import content
 from src import create_app
 from src.model.models import User
@@ -33,12 +33,8 @@ for u in TuUser.select():
         year = u.user_date_register.year
         month = u.user_date_register.month
         avatar = content.create_content(
-            u.user_profile_avatar,
-            'profile_avatar',
-            u.user,
-            u.user,
-            year,
-            month)
+            u.user_profile_avatar, "profile_avatar", u.user, u.user, year, month
+        )
 
         user = User.create(
             id=u.user,
@@ -51,7 +47,7 @@ for u in TuUser.select():
             birthday=u.user_profile_birthday,
             about=None,
             avatar=avatar,
-            is_admin=u.user_role > 1
+            is_admin=u.user_role > 1,
         )
 
         about = content.replace_uploads_in_text(user, u.user_profile_about)
@@ -59,8 +55,27 @@ for u in TuUser.select():
         user.save()
 
 force_created_users = [
-    5, 8, 21, 62, 97, 382, 44, 3392, 3412, 3425, 3398, 416,
-    383, 150, 337, 378, 398, 3427, 3434, 88]
+    5,
+    8,
+    21,
+    62,
+    97,
+    382,
+    44,
+    3392,
+    3412,
+    3425,
+    3398,
+    416,
+    383,
+    150,
+    337,
+    378,
+    398,
+    3427,
+    3434,
+    88,
+]
 
 for id in force_created_users:
     if User.get_or_none(User.id == id):
@@ -71,12 +86,8 @@ for id in force_created_users:
     year = u.user_date_register.year
     month = u.user_date_register.month
     avatar = content.create_content(
-        u.user_profile_avatar,
-        'profile_avatar',
-        u.user,
-        u.user,
-        year,
-        month)
+        u.user_profile_avatar, "profile_avatar", u.user, u.user, year, month
+    )
 
     User.create(
         id=u.user,
@@ -89,7 +100,7 @@ for id in force_created_users:
         birthday=u.user_profile_birthday,
         about=u.user_profile_about,
         avatar=avatar,
-        is_admin=u.user_role > 1
+        is_admin=u.user_role > 1,
     )
 
-print('Removed %d users' % removed)
+print("Removed %d users" % removed)
