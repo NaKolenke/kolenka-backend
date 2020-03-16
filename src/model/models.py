@@ -560,3 +560,6 @@ class AchievementUser(db.db_wrapper.Model):
     achievement = ForeignKeyField(model=Achievement)
     user = ForeignKeyField(model=User)
     comment = TextField(null=True, default=None)
+
+    def to_json(self):
+        return model_to_dict(self, exclude=get_exclude())

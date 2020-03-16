@@ -24,12 +24,18 @@ def dashboard():
     return jsonify({"success": 1, "users": users, "active_users_7_days": active_users})
 
 
-@bp.route("/achievements", methods=["GET"])
+@bp.route("/achievements/", methods=["GET"])
 def get_achievements():
     """Получить список наград"""
     achievements = Achievement.select()
 
     achievements = [a.to_json() for a in achievements]
+    for a in achievements:
+        users = AchievementUser.select(
+            AchievementUser.user, User.id, User.username
+        ).where(AchievementUser.achievement == a["id"])
+
+        a["users"] = [u.to_json() for u in users]
 
     return jsonify({"success": 1, "achievements": achievements})
 
@@ -62,7 +68,7 @@ def add_achievement():
     return jsonify({"success": 1, "achievement": achievement.to_json()})
 
 
-@bp.route("/achievements/assign", methods=["POST"])
+@bp.route("/achievements/assign/", methods=["POST"])
 @login_required
 def assign_achievement():
     user = get_user_from_request()
@@ -84,18 +90,20 @@ def assign_achievement():
 
     assign_errors = []
     for u in json["users"]:
-        user = User.get_or_none(user.id == u)
-        if user is None:
+        user_to_assign = User.get_or_none(User.id == u)
+        if user_to_assign is None:
             assign_errors.append(f"Cannot assign achievement to user {u}")
         else:
             AchievementUser.create(
-                achievement=achievement, user=user, comment=json.get("comment", None)
+                achievement=achievement,
+                user=user_to_assign,
+                comment=json.get("comment", None),
             )
 
     return jsonify({"success": 1, "errors": assign_errors})
 
 
-@bp.route("/achievements/unassign", methods=["POST"])
+@bp.route("/achievements/unassign/", methods=["POST"])
 @login_required
 def unassign_achievement():
     user = get_user_from_request()
