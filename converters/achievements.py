@@ -115,7 +115,6 @@ pattern = r".*?getDisplayName\(\) == '(?P<username>.*?)'}(?P<meta>.*?)<img.*src=
 
 id = 0
 achievements = []
-users_achievements = []
 
 image_base_path = "/var/www/old.kolenka"
 
@@ -136,9 +135,15 @@ for line in lines:
         title = m.group("title")
         meta = m.group("meta")
 
-        img = content.upload_image(creator.id, 2020, 3, image_base_path + image)
-        print(
-            f"Will create achievement {title} with image {img} and share it to user {username}"
-        )
-        # a = Achievement.create(title=title, image=img)
-        # AchievementUser.create(achievement=a, user=user, comment=meta)
+        created_achivement = None
+        for a in achievements:
+            if a.title == title:
+                created_achivement = a
+                break
+        if created_achivement is None:
+            img = content.upload_image(creator.id, 2020, 3, image_base_path + image)
+            created_achivement = Achievement.create(title=title, image=img)
+            achievements.append(created_achivement)
+        else:
+            img = created_achivement.image
+        AchievementUser.create(achievement=created_achivement, user=user, comment=meta)
