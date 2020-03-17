@@ -1,5 +1,6 @@
 import datetime
 from flask import Blueprint, jsonify, request
+import peewee
 from src.auth import login_required, get_user_from_request
 from src.model.models import User, Content, Achievement, AchievementUser
 from src import errors
@@ -31,9 +32,11 @@ def get_achievements():
 
     achievements = [a.to_json() for a in achievements]
     for a in achievements:
-        users = AchievementUser.select(
-            AchievementUser.user, User.id, User.username
-        ).where(AchievementUser.achievement == a["id"])
+        users = (
+            User.select(User.id, User.username)
+            .join(AchievementUser, peewee.JOIN.LEFT_OUTER)
+            .where(AchievementUser.achievement == a["id"])
+        )
 
         a["users"] = [u.to_json() for u in users]
 
