@@ -2,7 +2,7 @@ import datetime
 from flask import Blueprint, jsonify, request
 import peewee
 from src.auth import login_required, get_user_from_request
-from src.model.models import User, Content, Achievement, AchievementUser
+from src.model.models import User, Content, Achievement, AchievementUser, Notification
 from src import errors
 
 
@@ -101,6 +101,14 @@ def assign_achievement():
                 achievement=achievement,
                 user=user_to_assign,
                 comment=json.get("comment", None),
+            )
+
+            Notification.create(
+                user=user_to_assign,
+                created_date=datetime.datetime.now(),
+                text=f"Новая награда: {achievement.title}",
+                object_type="achievement",
+                object_id=achievement.id,
             )
 
     return jsonify({"success": 1, "errors": assign_errors})
