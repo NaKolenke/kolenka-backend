@@ -128,11 +128,13 @@ def unassign_achievement():
 
     assign_errors = []
     for u in json["users"]:
-        user = User.get_or_none(user.id == u)
-        if user is None:
+        user_to_unassign = User.get_or_none(User.id == u)
+        if user_to_unassign is None:
             assign_errors.append(f"Cannot unassign achievement from user {u}")
         else:
-            assign = AchievementUser.get_or_none(achievement=achievement, user=user)
+            assign = AchievementUser.get_or_none(
+                achievement=achievement, user=user_to_unassign
+            )
             assign.delete_instance()
 
     return jsonify({"success": 1, "errors": assign_errors})
