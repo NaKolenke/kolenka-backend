@@ -92,6 +92,6 @@ def get(id):
     """Получить файл по id"""
     content = Content.get_or_none(Content.id == id)
     if content is not None:
-        return send_file(content.path)
+        return send_file(content.path, add_etags=False)
     else:
         return errors.not_found()
