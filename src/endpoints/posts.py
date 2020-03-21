@@ -254,12 +254,8 @@ def comments(url):
         )
 
         if user.id != post.creator.id:
-            notification_text = (
-                "Пользователь {0} "
-                + "оставил комментарий к вашему посту {1}: {2}".format(
-                    user.visible_name, post.title, text
-                )
-            )
+            t = "Пользователь {0} оставил комментарий к вашему посту {1}: {2}"
+            notification_text = t.format(user.visible_name, post.title, text)
 
             Notification.create(
                 user=post.creator,
@@ -271,12 +267,8 @@ def comments(url):
 
         if parent is not None:
             if user.id != parent.creator.id:
-                notification_text = (
-                    "Пользователь {0} "
-                    + "ответил на ваш комментарий {1}: {2}".format(
-                        user.visible_name, parent.text, text
-                    )
-                )
+                t = "Пользователь {0} ответил на ваш комментарий {1}: {2}"
+                notification_text = t.format(user.visible_name, parent.text, text)
 
                 Notification.create(
                     user=parent.creator,
@@ -287,6 +279,38 @@ def comments(url):
                 )
 
         return jsonify({"success": 1, "comment": comment.to_json()})
+
+
+@bp.route("/<url>/comments/<comment_id>", methods=["PUT"])
+def edit_comment(url, comment_id):
+    """Редактировать комментарий"""
+    post = Post.get_or_none(Post.url == url)
+    if post is None:
+        return errors.not_found()
+
+    user = get_user_from_request()
+    if user is None:
+        return errors.not_authorized()
+
+    comment = Comment.get_or_none(Comment.id == comment_id)
+    if comment is None:
+        return errors.not_found()
+
+    is_accessible = user.is_admin or comment.creator == user
+    if not is_accessible:
+        return errors.no_access()
+
+    json = request.get_json()
+
+    if "text" in json:
+        text = sanitize(json.get("text"))
+    else:
+        return errors.wrong_payload("text")
+
+    comment.text = text
+    comment.save()
+
+    return jsonify({"success": 1, "comment": comment.to_json()})
 
 
 def fill_post_from_json(post, json):
