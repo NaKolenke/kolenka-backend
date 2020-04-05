@@ -53,7 +53,6 @@ def create_post():
     if Post.get_or_none(Post.url == url) is not None:
         return errors.post_url_already_taken()
 
-    fill_post_from_json(post, json)
     error = set_blog(post, json, user)
     if error is not None:
         error_response = {
@@ -62,7 +61,11 @@ def create_post():
         }[error]
         return error_response
 
+    fill_post_from_json(post, json)
+
     post.save()
+
+    set_tags_for_post(post, json)
 
     return jsonify({"success": 1, "post": post.to_json()})
 
@@ -142,7 +145,6 @@ def _edit_post(post):
                 if Post.get_or_none(Post.url == url) is not None:
                     return errors.post_url_already_taken()
 
-        fill_post_from_json(post, json)
         error = set_blog(post, json, user)
         if error is not None:
             error_response = {
@@ -151,7 +153,11 @@ def _edit_post(post):
             }[error]
             return error_response
 
+        fill_post_from_json(post, json)
+
         post.save()
+
+        set_tags_for_post(post, json)
 
         return jsonify({"success": 1, "post": post.to_json()})
     else:
@@ -327,6 +333,11 @@ def fill_post_from_json(post, json):
         post.is_draft = json.get("is_draft", post.is_draft)
         post.url = json.get("url", post.url)
 
+    post.updated_date = datetime.datetime.now()
+
+
+def set_tags_for_post(post, json):
+    if json is not None:
         tags = json.get("tags", [])
         TagMark.delete().where(TagMark.post == post).execute()
         for t in tags:
@@ -334,8 +345,6 @@ def fill_post_from_json(post, json):
             if tag is None:
                 tag = Tag.create(title=t, created_date=datetime.datetime.now())
             TagMark.create(tag=tag, post=post)
-
-    post.updated_date = datetime.datetime.now()
 
 
 def set_blog(post, json, user):
