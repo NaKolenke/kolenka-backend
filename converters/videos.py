@@ -5,6 +5,8 @@ from src.model.models import Post
 create_app()
 
 for p in Post.select():
+    if not p.text:
+        continue
     p.text = p.text.replace("http://www.youtube.com", "https://www.youtube.com")
     p.text = p.text.replace("http://youtube.com", "https://youtube.com")
 

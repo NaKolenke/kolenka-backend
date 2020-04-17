@@ -35,7 +35,7 @@ allowed_tags = bleach.ALLOWED_TAGS + [
 allowed_attrs = dict(bleach.ALLOWED_ATTRIBUTES)
 allowed_attrs.update(
     {
-        "*": ["data", "style"],
+        "*": ["data", "style", "class"],
         "img": ["src", "width", "height", "alt", "title"],
         "iframe": ["src", "allowfullscreen", "frameborder", "width", "height"],
         "cut": ["name"],
