@@ -49,5 +49,7 @@ For launching flask server see README.md"""
                 import converters.votes
             elif sys.argv[2] == "achievements":
                 import converters.achievements
+            elif sys.argv[2] == "videos":
+                import converters.videos
         else:
             print("Unrecognized command")
