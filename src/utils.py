@@ -30,6 +30,7 @@ allowed_tags = bleach.ALLOWED_TAGS + [
     "br",
     "iframe",
     "cut",
+    "spoiler",
 ]
 
 allowed_attrs = dict(bleach.ALLOWED_ATTRIBUTES)
