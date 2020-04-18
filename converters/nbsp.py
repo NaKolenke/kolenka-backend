@@ -5,7 +5,7 @@ from src.model.models import Post, Comment
 
 
 def process_text(text):
-    text = text.replace("&nbsp", " ")
+    text = text.replace("&nbsp;", " ")
 
     return text
 
