@@ -40,6 +40,7 @@ allowed_attrs.update(
         "img": ["src", "width", "height", "alt", "title"],
         "iframe": ["src", "allowfullscreen", "frameborder", "width", "height"],
         "cut": ["name"],
+        "spoiler": ["title"],
     }
 )
 
