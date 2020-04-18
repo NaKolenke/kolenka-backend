@@ -19,37 +19,11 @@ For launching flask server see README.md"""
 
         migrate_schema(db.get_database())
     elif sys.argv[1] == "convert":
-        if len(sys.argv) == 2:
-            print("Converting all models")
-            print("Converting users")
-            import converters.users
+        if len(sys.argv) == 3:
+            from converters import convert
 
-            print("Converting blogs")
-            import converters.blogs
-
-            print("Converting posts")
-            import converters.posts
-
-            print("Converting comments")
-            import converters.comments
-        elif len(sys.argv) == 3:
-            if sys.argv[2] == "users":
-                import converters.users
-            elif sys.argv[2] == "blogs":
-                import converters.blogs
-            elif sys.argv[2] == "posts":
-                import converters.posts
-            elif sys.argv[2] == "comments":
-                import converters.comments
-            elif sys.argv[2] == "betacontent":
-                import converters.betacontent
-            elif sys.argv[2] == "stickers":
-                import converters.stickers
-            elif sys.argv[2] == "votes":
-                import converters.votes
-            elif sys.argv[2] == "achievements":
-                import converters.achievements
-            elif sys.argv[2] == "videos":
-                import converters.videos
+            convert(sys.argv[2])
         else:
-            print("Unrecognized command")
+            print("Use convert <type>")
+    else:
+        print("Unrecognized command")

@@ -3,42 +3,46 @@ from src import create_app
 from converters import content
 from src.model.models import Post, User, Comment
 
-create_app()
 
-for c in TuComment.select():
-    if c.target_type != 'topic':
-        continue
+def convert():
+    create_app()
 
-    creator = User.get_or_none(User.id == c.user)
-    if not creator:
-        print('Skipped comment. Owner:' + TuUser.get(TuUser.user == c.user).user_login)
-        continue
+    for c in TuComment.select():
+        if c.target_type != "topic":
+            continue
 
-    updated = c.comment_date
-    if not updated:
-        updated = c.comment_date_edit
+        creator = User.get_or_none(User.id == c.user)
+        if not creator:
+            print(
+                "Skipped comment. Owner:" + TuUser.get(TuUser.user == c.user).user_login
+            )
+            continue
 
-    text = content.replace_uploads_in_text(creator, c.comment_text)
+        updated = c.comment_date
+        if not updated:
+            updated = c.comment_date_edit
 
-    post = Post.get_or_none(Post.id == c.target)
-    if post is None:
-        print('Skipped comment ' + str(c.comment) + '. No post' + str(c.target))
-        continue
+        text = content.replace_uploads_in_text(creator, c.comment_text)
 
-    parent = None
-    if c.comment_pid:
-        parent = Comment.get_or_none(Comment.id == c.comment_pid)
-        if parent is None:
-            print('Skipped comment ' + str(c.comment) + '. No parent')
+        post = Post.get_or_none(Post.id == c.target)
+        if post is None:
+            print("Skipped comment " + str(c.comment) + ". No post" + str(c.target))
+            continue
 
-    Comment.create(
-        id=c.comment,
-        post=post,
-        creator=creator,
-        parent=parent,
-        level=c.comment_level,
-        created_date=c.comment_date,
-        updated_date=updated,
-        text=text,
-        rating=0
-    )
+        parent = None
+        if c.comment_pid:
+            parent = Comment.get_or_none(Comment.id == c.comment_pid)
+            if parent is None:
+                print("Skipped comment " + str(c.comment) + ". No parent")
+
+        Comment.create(
+            id=c.comment,
+            post=post,
+            creator=creator,
+            parent=parent,
+            level=c.comment_level,
+            created_date=c.comment_date,
+            updated_date=updated,
+            text=text,
+            rating=0,
+        )

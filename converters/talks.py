@@ -3,71 +3,72 @@ from src import create_app
 from converters import content
 from src.model.models import Conversation, User, Message, ConversationParticipiant
 
-create_app()
 
-for t in TuTalk.select():
-    creator = User.get_or_none(User.id == t.user)
-    if not creator:
-        print('Skipped talk. Owner:' + TuUser.get(TuUser.user == t.user).user_login)
-        continue
+def convert():
+    create_app()
 
-    conversation = Conversation.create(
-        id=t.talk,
-        creator=creator,
-        created_date=t.talk_date,
-        title=t.talk_title
-    )
+    for t in TuTalk.select():
+        creator = User.get_or_none(User.id == t.user)
+        if not creator:
+            print("Skipped talk. Owner:" + TuUser.get(TuUser.user == t.user).user_login)
+            continue
 
-    text = content.replace_uploads_in_text(creator, t.talk_text)
+        conversation = Conversation.create(
+            id=t.talk, creator=creator, created_date=t.talk_date, title=t.talk_title
+        )
 
-    # тут возможно надо будет перенести текст в объект conversation
-    Message.create(
-        id=t.talk,
-        conversation=conversation,
-        creator=creator,
-        parent=None,
-        level=0,
-        created_date=t.talk_date,
-        updated_date=t.talk_date,
-        text=text,
-    )
+        text = content.replace_uploads_in_text(creator, t.talk_text)
 
-for c in TuComment.select():
-    if c.target_type != 'talk':
-        continue
+        # тут возможно надо будет перенести текст в объект conversation
+        Message.create(
+            id=t.talk,
+            conversation=conversation,
+            creator=creator,
+            parent=None,
+            level=0,
+            created_date=t.talk_date,
+            updated_date=t.talk_date,
+            text=text,
+        )
 
-    creator = User.get_or_none(User.id == c.user)
-    if not creator:
-        print('Skipped comment. Owner:' + TuUser.get(TuUser.user == c.user).user_login)
-        continue
+    for c in TuComment.select():
+        if c.target_type != "talk":
+            continue
 
-    updated = c.comment_date
-    if not updated:
-        updated = c.comment_date_edit
+        creator = User.get_or_none(User.id == c.user)
+        if not creator:
+            print(
+                "Skipped comment. Owner:" + TuUser.get(TuUser.user == c.user).user_login
+            )
+            continue
 
-    text = content.replace_uploads_in_text(creator, c.comment_text)
+        updated = c.comment_date
+        if not updated:
+            updated = c.comment_date_edit
 
-    Message.create(
-        id=c.comment,
-        conversation=Conversation.get(c.target),
-        creator=creator,
-        parent=Message.get(Message.id == c.comment_pid),
-        level=c.comment_level,
-        created_date=c.comment_date,
-        updated_date=updated,
-        text=text
-    )
+        text = content.replace_uploads_in_text(creator, c.comment_text)
 
-for t in TuTalkUser.select():
-    user = User.get_or_none(User.id == t.user)
+        Message.create(
+            id=c.comment,
+            conversation=Conversation.get(c.target),
+            creator=creator,
+            parent=Message.get(Message.id == c.comment_pid),
+            level=c.comment_level,
+            created_date=c.comment_date,
+            updated_date=updated,
+            text=text,
+        )
 
-    if not user:
-        print('Skipped user participiation. Owner:' + TuUser.get(TuUser.user == t.user).user_login)
-        continue
+    for t in TuTalkUser.select():
+        user = User.get_or_none(User.id == t.user)
 
-    conversation = Conversation.get(Conversation.id == t.talk)
+        if not user:
+            print(
+                "Skipped user participiation. Owner:"
+                + TuUser.get(TuUser.user == t.user).user_login
+            )
+            continue
 
-    ConversationParticipiant.create(
-        user=user,
-        conversation=conversation
-    )
+        conversation = Conversation.get(Conversation.id == t.talk)
+
+        ConversationParticipiant.create(user=user, conversation=conversation)

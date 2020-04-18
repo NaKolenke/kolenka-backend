@@ -3,8 +3,6 @@ from converters import content
 from src import create_app
 from src.model.models import User, Achievement, AchievementUser
 
-create_app()
-
 
 old_ach = """
 {if $oUserProfile->getDisplayName() == 'Hrenzerg'}<img src="/common/templates/skin/start-kit/assets/images/achi_nakolennik1_first_place.png" title="За победу в Наколеннике №01">{/if}
@@ -111,39 +109,43 @@ old_ach = """
 """  # noqa
 
 
-pattern = r".*?getDisplayName\(\) == '(?P<username>.*?)'}(?P<meta>.*?)<img.*src=\"(?P<image>.*?)\" title=['\"](?P<title>.*)['\"]"  # noqa
+def convert():
+    create_app()
 
-id = 0
-achievements = []
+    pattern = r".*?getDisplayName\(\) == '(?P<username>.*?)'}(?P<meta>.*?)<img.*src=\"(?P<image>.*?)\" title=['\"](?P<title>.*)['\"]"  # noqa
 
-image_base_path = "/var/www/old.kolenka"
+    achievements = []
 
-creator = User.get_or_none(User.username == "Xitilon")
+    image_base_path = "/var/www/old.kolenka"
 
-lines = old_ach.split("\n")
-for line in lines:
-    m = re.search(pattern, line)
-    if m:
-        username = m.group("username")
+    creator = User.get_or_none(User.username == "Xitilon")
 
-        user = User.get_or_none(User.username == username)
-        if user is None:
-            print(f"Cannot find user {username}")
-            continue
+    lines = old_ach.split("\n")
+    for line in lines:
+        m = re.search(pattern, line)
+        if m:
+            username = m.group("username")
 
-        image = m.group("image")
-        title = m.group("title")
-        meta = m.group("meta")
+            user = User.get_or_none(User.username == username)
+            if user is None:
+                print(f"Cannot find user {username}")
+                continue
 
-        created_achivement = None
-        for a in achievements:
-            if a.title == title:
-                created_achivement = a
-                break
-        if created_achivement is None:
-            img = content.upload_image(creator.id, 2020, 3, image_base_path + image)
-            created_achivement = Achievement.create(title=title, image=img)
-            achievements.append(created_achivement)
-        else:
-            img = created_achivement.image
-        AchievementUser.create(achievement=created_achivement, user=user, comment=meta)
+            image = m.group("image")
+            title = m.group("title")
+            meta = m.group("meta")
+
+            created_achivement = None
+            for a in achievements:
+                if a.title == title:
+                    created_achivement = a
+                    break
+            if created_achivement is None:
+                img = content.upload_image(creator.id, 2020, 3, image_base_path + image)
+                created_achivement = Achievement.create(title=title, image=img)
+                achievements.append(created_achivement)
+            else:
+                img = created_achivement.image
+            AchievementUser.create(
+                achievement=created_achivement, user=user, comment=meta
+            )
