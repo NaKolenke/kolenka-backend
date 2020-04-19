@@ -8,6 +8,7 @@ def process_text(text):
     # move closing tag before cut
     # <cut></p> -> </p><cut/>
     # <cut></div> -> </div><cut/> span
+    text = text.replace("<cut>", "<cut/>")
 
     text = text.replace("<cut></p>", "</p><cut>")
     text = text.replace("<cut></div>", "</div><cut>")
