@@ -9,7 +9,8 @@ def process_text(text):
     # <cut></p> -> </p><cut/>
     # <cut></div> -> </div><cut/> span
     text = text.replace("<cut>", "<cut name=" "> </cut>")
-    text = text.replace("<cut/>", "<cut name=" "> </cut>")
+    text = text.replace("<cut/>", '<cut name=" "> </cut>')
+    text = text.replace("<cut name=> </cut>", '<cut name=" "> </cut>')
 
     text = text.replace("<cut></p>", "</p><cut>")
     text = text.replace("<cut></div>", "</div><cut>")
