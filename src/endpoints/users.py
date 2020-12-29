@@ -1,13 +1,24 @@
 import datetime
 import hashlib
-from flask import current_app, Blueprint, request, jsonify
-from playhouse.flask_utils import PaginatedQuery
-from src.auth import login_required, get_user_from_request
-from src.model.models import User, Token, Content, Blog, Post, Vote, Achievement
-from src import errors
-from src.email import EmailSender
-from src.utils import sanitize, doc_sample
 
+from flask import Blueprint, current_app, jsonify, request
+from playhouse.flask_utils import PaginatedQuery
+
+from src import errors
+from src.auth import get_user_from_request, login_required
+from src.email import EmailSender
+from src.model.models import (
+    Achievement,
+    Blog,
+    Content,
+    Jam,
+    JamEntry,
+    Post,
+    Token,
+    User,
+    Vote,
+)
+from src.utils import doc_sample, sanitize
 
 bp = Blueprint("users", __name__, url_prefix="/users/")
 
@@ -89,6 +100,44 @@ def user_posts(username):
         {
             "success": 1,
             "posts": posts,
+            "meta": {"page_count": paginated_query.get_page_count()},
+        }
+    )
+
+
+@bp.route("/<username>/jams/")
+def user_jams(username):
+    """Получить список джемов, которые пользователь организовал"""
+    user = User.get_or_none(User.username == username)
+
+    if user is None:
+        return errors.not_found()
+
+    query = Jam.get_jams_organized_by_user(user)
+
+    jams = [e.to_json() for e in query]
+
+    return jsonify({"success": 1, "jams": jams})
+
+
+@bp.route("/<username>/jam-entries/")
+def user_jam_entries(username):
+    """Получить список заявок на джем для данного пользователя"""
+    user = User.get_or_none(User.username == username)
+
+    if user is None:
+        return errors.not_found()
+
+    query = JamEntry.get_user_entries(user)
+    limit = max(1, min(int(request.args.get("limit") or 100), 100))
+    paginated_query = PaginatedQuery(query, paginate_by=limit)
+
+    entries = [e.to_json() for e in paginated_query.get_object_list()]
+
+    return jsonify(
+        {
+            "success": 1,
+            "entries": entries,
             "meta": {"page_count": paginated_query.get_page_count()},
         }
     )

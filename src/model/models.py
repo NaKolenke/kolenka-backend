@@ -1,16 +1,17 @@
 import datetime
 import secrets
+
 from peewee import (
-    IntegerField,
-    BigIntegerField,
-    CharField,
-    TextField,
-    ForeignKeyField,
-    DateTimeField,
-    DateField,
-    BooleanField,
-    fn,
     JOIN,
+    BigIntegerField,
+    BooleanField,
+    CharField,
+    DateField,
+    DateTimeField,
+    ForeignKeyField,
+    IntegerField,
+    TextField,
+    fn,
 )
 from playhouse.shortcuts import model_to_dict
 
@@ -41,7 +42,7 @@ class Content(db.db_wrapper.Model):
 
     @property
     def is_small_image(self):
-        return self.is_image and self.size < 1024 * 25  # 25 kb?
+        return self.is_image and self.size < 1024 * 300  # 25 kb?
 
     @classmethod
     def get_user_files(cls, user):
@@ -259,7 +260,7 @@ class Post(db.db_wrapper.Model):
             .join(Blog)
             .where(
                 # (Post.is_on_main) &
-                (Post.is_draft == False)
+                (Post.is_draft == False)  # noqa: E712
                 & (Blog.blog_type != 3)  # noqa: E712
             )
             .order_by(Post.created_date.desc())
@@ -297,9 +298,9 @@ class Post(db.db_wrapper.Model):
             .switch(Post)
             .join(Blog)
             .where(
-                (Post.is_draft == False)
-                & (TagMark.tag == tag)  # noqa: E712
-                & (Blog.blog_type != 3)  # noqa: E712
+                (Post.is_draft == False)  # noqa: E712
+                & (TagMark.tag == tag)
+                & (Blog.blog_type != 3)
             )
             .order_by(Post.created_date.desc())
         )
@@ -313,7 +314,8 @@ class Post(db.db_wrapper.Model):
 
 
 class Comment(db.db_wrapper.Model):
-    post = ForeignKeyField(model=Post)
+    object_type = CharField(null=True)
+    object_id = IntegerField(default=0)
     creator = ForeignKeyField(model=User)
     parent = ForeignKeyField(model="self", default=None, null=True)
     level = IntegerField(default=0)
@@ -322,10 +324,18 @@ class Comment(db.db_wrapper.Model):
     text = TextField()
 
     @classmethod
+    def get_comments_for(cls, type, object_id):
+        return (
+            cls.select()
+            .where((Comment.object_type == type) & (Comment.object_id == object_id))
+            .order_by(Comment.created_date.desc())
+        )
+
+    @classmethod
     def get_comments_for_post(cls, post):
         return (
             cls.select()
-            .where(Comment.post == post)
+            .where((Comment.object_type == "post") & (Comment.object_id == post.id))
             .order_by(Comment.created_date.desc())
         )
 
@@ -334,7 +344,7 @@ class Comment(db.db_wrapper.Model):
         return cls.get_comments_for_post(post).count()
 
     def to_json(self):
-        comment_dict = model_to_dict(self, exclude=get_exclude() + [Comment.post])
+        comment_dict = model_to_dict(self, exclude=get_exclude())
 
         return comment_dict
 
@@ -488,46 +498,133 @@ class Jam(db.db_wrapper.Model):
     start_date = DateTimeField(null=True, default=None)
     end_date = DateTimeField(null=True, default=None)
     logo = ForeignKeyField(model=Content, backref="logo", null=True)
+    status = IntegerField(default=0)
 
     @classmethod
-    def get_all_jams(cls):
-        return cls.select().order_by(Jam.start_date.desc())
+    def get_current_jams(cls):
+        return cls.select().where(Jam.status == 1).order_by(Jam.start_date.desc())
+
+    @classmethod
+    def get_closest_jams(cls):
+        return cls.select().where(Jam.status == 0).order_by(Jam.start_date.desc())
+
+    @classmethod
+    def get_closed_jams(cls):
+        return cls.select().where(Jam.status == 2).order_by(Jam.start_date.desc())
+
+    @classmethod
+    def get_jams_organized_by_user(cls, user):
+        return cls.select().where(Jam.creator == user).order_by(Jam.created_date.desc())
 
     def to_json(self):
-        return model_to_dict(self, exclude=get_exclude())
+        jam_dict = model_to_dict(self, exclude=get_exclude())
+
+        criterias = JamCriteria.select().where(JamCriteria.jam == self)
+        jam_dict["criterias"] = [c.to_json() for c in criterias]
+
+        return jam_dict
 
 
 class JamCriteria(db.db_wrapper.Model):
     jam = ForeignKeyField(model=Jam)
     title = TextField(null=True, default=None)
+    order = IntegerField(default=0)
+
+    def to_json(self):
+        return model_to_dict(self, exclude=get_exclude(), recurse=False)
 
 
 class JamEntry(db.db_wrapper.Model):
     creator = ForeignKeyField(model=User)
+    jam = ForeignKeyField(model=Jam, default=None)
+    title = TextField(null=True, default=None)
+    url = CharField(null=True, unique=True)
     short_info = TextField(null=True, default=None)
     info = TextField(null=True, default=None)
     created_date = DateTimeField()
     logo = ForeignKeyField(model=Content, backref="logo", null=True)
+    is_archived = BooleanField(default=False)
+
+    @classmethod
+    def get_user_entries(cls, user):
+        return (
+            cls.select()
+            .where(
+                (JamEntry.is_archived == False)  # noqa: E712
+                & (JamEntry.creator == user)
+            )
+            .order_by(JamEntry.created_date.desc())
+        )
+
+    @classmethod
+    def get_entries_for_post(cls, post):
+        return (
+            cls.select()
+            .join(JamEntryPost)
+            .where(
+                (JamEntry.is_archived == False)  # noqa: E712
+                & (JamEntryPost.post == post)
+            )
+            .order_by(JamEntry.created_date.desc())
+        )
 
     def to_json(self):
-        return model_to_dict(self, exclude=get_exclude())
+        entry_dict = model_to_dict(self, exclude=get_exclude())
+        links = JamEntryLink.select().where(JamEntryLink.entry == self)
+        entry_dict["links"] = [c.to_json() for c in links]
+
+        posts = (
+            Post.select(Post.id, Post.title, Post.url)
+            .join(JamEntryPost)
+            .where(
+                (Post.is_draft == False) & (JamEntryPost.entry == self)  # noqa: E712
+            )
+            .order_by(Post.created_date.desc())
+        )
+        entry_dict["posts"] = [p.to_json() for p in posts]
+
+        return entry_dict
 
 
 class JamEntryPost(db.db_wrapper.Model):
     entry = ForeignKeyField(model=JamEntry)
     post = ForeignKeyField(model=Post)
 
+    def to_json(self):
+        return model_to_dict(self, exclude=get_exclude(), recurse=False)
+
+
+class JamEntryLink(db.db_wrapper.Model):
+    entry = ForeignKeyField(model=JamEntry)
+    title = TextField(null=True, default=None)
+    href = CharField(null=True)
+    order = IntegerField(default=0)
+
+    def to_json(self):
+        return model_to_dict(self, exclude=get_exclude(), recurse=False)
+
 
 class JamEntryVote(db.db_wrapper.Model):
     entry = ForeignKeyField(model=JamEntry)
     voter = ForeignKeyField(model=User)
     criteria = ForeignKeyField(model=JamCriteria)
+    vote = IntegerField(default=0)
+
+    def to_json(self):
+        return model_to_dict(
+            self,
+            exclude=get_exclude()
+            + [JamEntryVote.entry, JamEntryVote.voter, JamCriteria.jam],
+        )
 
 
 class JamEntryFeedback(db.db_wrapper.Model):
     entry = ForeignKeyField(model=JamEntry)
     voter = ForeignKeyField(model=User)
     feedback = TextField()
+
+    def to_json(self):
+        return model_to_dict(self, exclude=get_exclude(), recurse=False)
 
 
 class Achievement(db.db_wrapper.Model):

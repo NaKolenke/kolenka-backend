@@ -81,6 +81,10 @@ def blog_not_found():
     return prepare_error(41, "Blog not found", 400)
 
 
+def blog_url_already_taken():
+    return prepare_error(42, "A blog with this url already exists", 400)
+
+
 def post_url_already_taken():
     return prepare_error(50, "A post with this url already exists", 400)
 
@@ -119,3 +123,11 @@ def achievement_is_not_image():
 
 def achievement_too_large():
     return prepare_error(101, "Achievement image is too large", 400)
+
+
+def jam_url_already_taken():
+    return prepare_error(110, "A jam with this url already exists", 400)
+
+
+def jam_entry_url_already_taken():
+    return prepare_error(111, "A jam entry with this url already exists", 400)

@@ -1,10 +1,23 @@
 import datetime
 import re
+
 from flask import Blueprint, jsonify, request
 from playhouse.flask_utils import PaginatedQuery
-from src.auth import get_user_from_request, login_required
-from src.model.models import Post, Blog, Comment, Notification, Vote, Tag, TagMark
+
 from src import errors
+from src.auth import get_user_from_request, login_required
+from src.endpoints._comments import _add_comment, _edit_comment, _get_comments
+from src.model.models import (
+    Blog,
+    Comment,
+    JamEntry,
+    JamEntryPost,
+    Notification,
+    Post,
+    Tag,
+    TagMark,
+    Vote,
+)
 from src.utils import sanitize
 
 
@@ -67,6 +80,8 @@ def create_post():
 
     set_tags_for_post(post, json)
 
+    manage_jam_entries(post, json)
+
     return jsonify({"success": 1, "post": post.to_json()})
 
 
@@ -108,6 +123,9 @@ def _get_post(post):
     post_dict = post.to_json()
     post_dict = Vote.add_votes_info(post_dict, 3, user)
 
+    entries = JamEntry.get_entries_for_post(post)
+    post_dict["jam_entries"] = [e.to_json() for e in entries]
+
     return jsonify({"success": 1, "post": post_dict})
 
 
@@ -138,13 +156,6 @@ def _edit_post(post):
     if post.creator == user or role == 1 or user.is_admin:
         json = request.get_json()
 
-        if "url" in json:
-            url = json["url"]
-            if url != post.url:
-                # validate, that there is no posts with new url
-                if Post.get_or_none(Post.url == url) is not None:
-                    return errors.post_url_already_taken()
-
         error = set_blog(post, json, user)
         if error is not None:
             error_response = {
@@ -155,9 +166,14 @@ def _edit_post(post):
 
         fill_post_from_json(post, json)
 
+        if not validate_url(post):
+            return errors.post_url_already_taken()
+
         post.save()
 
         set_tags_for_post(post, json)
+
+        manage_jam_entries(post, json)
 
         return jsonify({"success": 1, "post": post.to_json()})
     else:
@@ -187,7 +203,9 @@ def _delete_post(post):
     user = get_user_from_request()
 
     if post.creator == user or user.is_admin:
-        Comment.delete().where(Comment.post == post).execute()
+        Comment.delete().where(
+            (Comment.object_type == "post") & (Comment.object_id == post.id)
+        ).execute()
         TagMark.delete().where(TagMark.post == post).execute()
         post.delete_instance()
 
@@ -201,13 +219,16 @@ def _delete_post(post):
     if role != 1:
         return errors.no_access()
 
-    Comment.delete().where(Comment.post == post).execute()
+    Comment.delete().where(
+        (Comment.object_type == "post") & (Comment.object_id == post.id)
+    ).execute()
     TagMark.delete().where(TagMark.post == post).execute()
     post.delete_instance()
 
     return jsonify({"success": 1})
 
 
+@login_required
 @bp.route("/<url>/comments/", methods=["GET", "POST"])
 def comments(url):
     """Получить список комментариев для поста или добавить новый комментарий"""
@@ -224,12 +245,7 @@ def comments(url):
 
             if post.creator != user:
                 return errors.no_access()
-
-        query = Comment.get_comments_for_post(post)
-        comments = [c.to_json() for c in query]
-        comments = [Vote.add_votes_info(c, 4, user) for c in comments]
-
-        return jsonify({"success": 1, "comments": comments})
+        return _get_comments("post", post.id, user)
     elif request.method == "POST":
         user = get_user_from_request()
         if user is None:
@@ -242,22 +258,14 @@ def comments(url):
         else:
             return errors.wrong_payload("text")
 
-        parent = None
-        level = 0
+        parent_id = None
         if "parent" in json:
-            parent = Comment.get_or_none(Comment.id == json["parent"])
-            if parent is not None:
-                level = parent.level + 1
+            parent_id = json["parent"]
+        parent = None
+        if parent_id:
+            parent = Comment.get_or_none(Comment.id == parent_id)
 
-        comment = Comment.create(
-            post=post,
-            created_date=datetime.datetime.now(),
-            updated_date=datetime.datetime.now(),
-            creator=user,
-            text=text,
-            parent=parent,
-            level=level,
-        )
+        comment = _add_comment("post", post.id, user, text, parent_id)
 
         if user.id != post.creator.id:
             t = "Пользователь {0} оставил комментарий к вашему посту {1}: {2}"
@@ -287,7 +295,8 @@ def comments(url):
         return jsonify({"success": 1, "comment": comment.to_json()})
 
 
-@bp.route("/<url>/comments/<comment_id>", methods=["PUT"])
+@login_required
+@bp.route("/<url>/comments/<comment_id>/", methods=["PUT"])
 def edit_comment(url, comment_id):
     """Редактировать комментарий"""
     post = Post.get_or_none(Post.url == url)
@@ -298,23 +307,15 @@ def edit_comment(url, comment_id):
     if user is None:
         return errors.not_authorized()
 
-    comment = Comment.get_or_none(Comment.id == comment_id)
-    if comment is None:
-        return errors.not_found()
-
-    is_accessible = user.is_admin or comment.creator == user
-    if not is_accessible:
-        return errors.no_access()
-
     json = request.get_json()
 
+    text = None
     if "text" in json:
         text = sanitize(json.get("text"))
     else:
         return errors.wrong_payload("text")
 
-    comment.text = text
-    comment.save()
+    comment = _edit_comment(comment_id, user, text)
 
     return jsonify({"success": 1, "comment": comment.to_json()})
 
@@ -334,6 +335,17 @@ def fill_post_from_json(post, json):
         post.url = json.get("url", post.url)
 
     post.updated_date = datetime.datetime.now()
+
+
+def validate_url(post):
+    new_url = post.url
+
+    posts_with_url = Post.select().where(Post.url == new_url)
+    for p in posts_with_url:
+        if p.url == new_url and p.id != post.id:
+            return False
+
+    return True
 
 
 def set_tags_for_post(post, json):
@@ -395,3 +407,15 @@ def process_cut(post):
         "cut_name": cut_name if has_named_cut else "",
         "text_before_cut": text_before_cut,
     }
+
+
+def manage_jam_entries(post, json):
+    if json is not None:
+        entries = json.get("jam_entries", [])
+        JamEntryPost.delete().where(JamEntryPost.post == post).execute()
+        for e in entries:
+            entry = JamEntry.get_or_none(JamEntry.id == e["id"])
+            if entry is None:
+                # just skip for now
+                continue
+            JamEntryPost.create(entry=entry, post=post)

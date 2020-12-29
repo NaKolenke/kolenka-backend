@@ -36,6 +36,7 @@ def create_tables():
         JamEntryFeedback,
         JamEntryPost,
         JamEntryVote,
+        JamEntryLink,
         Achievement,
         AchievementUser,
     )
@@ -66,6 +67,7 @@ def create_tables():
             JamEntryFeedback,
             JamEntryPost,
             JamEntryVote,
+            JamEntryLink,
             Achievement,
             AchievementUser,
         ]

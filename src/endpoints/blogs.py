@@ -1,20 +1,21 @@
 import datetime
+
 from flask import Blueprint, jsonify, request
 from playhouse.flask_utils import PaginatedQuery
-from src.auth import login_required, get_user_from_request
+
+from src import errors
+from src.auth import get_user_from_request, login_required
 from src.model.models import (
-    User,
     Blog,
+    BlogInvite,
     BlogParticipiation,
     Content,
-    BlogInvite,
-    Post,
     Notification,
+    Post,
+    User,
     Vote,
 )
-from src import errors
-from src.utils import sanitize, doc_sample
-
+from src.utils import doc_sample, sanitize
 
 bp = Blueprint("blogs", __name__, url_prefix="/blogs/")
 
@@ -52,6 +53,10 @@ def get_blogs():
 def create_blog():
     """Создать блог"""
     user = get_user_from_request()
+
+    url = request.get_json()["url"]
+    if Blog.get_or_none(Blog.url == url) is not None:
+        return errors.blog_url_already_taken()
 
     blog = Blog.create(
         created_date=datetime.datetime.now(),
@@ -100,6 +105,10 @@ def edit_blog(url):
         return errors.no_access()
 
     fill_blog_from_json(blog, request.get_json())
+
+    if not validate_url(blog):
+        return errors.blog_url_already_taken()
+
     blog.save()
 
     return jsonify({"success": 1, "blog": blog.to_json()})
@@ -266,3 +275,14 @@ def fill_blog_from_json(blog, json):
             blog.image = Content.get_or_none(Content.id == json["image"])
 
     blog.updated_date = datetime.datetime.now()
+
+
+def validate_url(blog):
+    new_url = blog.url
+    print(new_url)
+    blogs_with_url = Blog.select().where(Blog.url == new_url)
+    for b in blogs_with_url:
+        if b.url == new_url and b.id != blog.id:
+            return False
+
+    return True
