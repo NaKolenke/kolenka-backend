@@ -1,7 +1,7 @@
-from converters.models import TuUser, TuComment
-from src import create_app
 from converters import content
-from src.model.models import Post, User, Comment
+from converters.models import TuComment, TuUser
+from src import create_app
+from src.model.models import Comment, Post, User
 
 
 def convert():

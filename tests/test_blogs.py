@@ -1,6 +1,8 @@
 import datetime
+
 import pytest
-from src.model.models import User, Blog, BlogParticipiation, Token, BlogInvite
+
+from src.model.models import Blog, BlogInvite, BlogParticipiation, Token, User
 
 
 @pytest.fixture
@@ -92,7 +94,11 @@ def test_empty_blogs(client):
 
 
 def test_create_blog(client, user_token):
-    rv = client.post("/blogs/", headers={"Authorization": user_token[1].token})
+    rv = client.post(
+        "/blogs/",
+        headers={"Authorization": user_token[1].token},
+        json={"url": "blog-url"},
+    )
     assert rv.json["success"] == 1
     assert "blog" in rv.json, "No blog in response"
 

@@ -1,6 +1,8 @@
 import datetime
 from datetime import timedelta
+
 import pytest
+
 from src.model.models import Blog, BlogParticipiation, Jam
 
 
@@ -54,9 +56,8 @@ def test_jams(client, jam):
 
     rv = client.get("/jams/")
     assert rv.json["success"] == 1
-    assert len(rv.json["jams"]) == 1, "We should have only one jam"
-    assert rv.json["jams"][0]["title"] == jam.title
-    assert rv.json["meta"]["page_count"] == 1, "There should be one page"
+    assert len(rv.json["jams"]["closest"]) == 1, "We should have only one jam"
+    assert rv.json["jams"]["closest"][0]["title"] == jam.title
 
 
 def test_create_jam(client, user_token):
@@ -95,7 +96,7 @@ def test_create_jam(client, user_token):
 
 def test_edit_jam(client, user_token, jam):
     rv = client.post(
-        f"/jams/{jam.id}/",
+        f"/jams/{jam.url}/",
         headers={"Authorization": user_token[1].token},
         json={"title": "new title"},
     )
@@ -120,7 +121,7 @@ def test_edit_jam(client, user_token, jam):
 
 def test_edit_jam_not_creator(client, user_token, jam, reader_token):
     rv = client.post(
-        f"/jams/{jam.id}/",
+        f"/jams/{jam.url}/",
         headers={"Authorization": reader_token[1].token},
         json={"title": "new title"},
     )

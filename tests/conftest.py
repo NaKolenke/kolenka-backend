@@ -1,7 +1,9 @@
-import os
-import pytest
 import datetime
-from src.model.models import User, Token, Blog, BlogParticipiation, Post, Comment
+import os
+
+import pytest
+
+from src.model.models import Blog, BlogParticipiation, Comment, Post, Token, User
 
 
 @pytest.fixture(scope="function")
@@ -152,11 +154,12 @@ def post(user, blog):
 @pytest.fixture
 def comment(user, post):
     comment = Comment.create(
-        post=post,
         creator=user,
         created_date=datetime.datetime.now(),
         updated_date=datetime.datetime.now(),
         text="Some text",
+        object_type="post",
+        object_id=post.id,
     )
 
     from src.model import db

@@ -1,6 +1,8 @@
 import datetime
+
 import pytest
-from src.model.models import User, Token, Post, Comment
+
+from src.model.models import Comment, Post, Token, User
 
 
 @pytest.fixture
