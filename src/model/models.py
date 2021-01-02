@@ -314,7 +314,7 @@ class Post(db.db_wrapper.Model):
 
 
 class Comment(db.db_wrapper.Model):
-    post = ForeignKeyField(model=Post) # deprecated
+    post = ForeignKeyField(model=Post, default=None, null=True)  # deprecated
     object_type = CharField(null=True)
     object_id = IntegerField(default=0)
     creator = ForeignKeyField(model=User)
