@@ -120,8 +120,9 @@ def migration_v10(db, migrator: SchemaMigrator):
 
 
 def migration_v11(db, migrator: SchemaMigrator):
-    with db.atomic():
-        migrate(migrator.add_column("jamentrylink", "order", IntegerField(default=0)),)
+    pass
+    # with db.atomic():
+    # migrate(migrator.add_column("jamentrylink", "order", IntegerField(default=0)),)
 
 
 def migration_v12(db, migrator: SchemaMigrator):

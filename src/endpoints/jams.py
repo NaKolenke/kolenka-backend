@@ -338,7 +338,7 @@ def get_criterias(url, entry_url):
         return errors.not_found()
 
     criterias = JamEntryVote.select().where(
-        JamEntryVote.entry == entry & JamEntryVote.voter == get_user_from_request()
+        (JamEntryVote.entry == entry) & (JamEntryVote.voter == get_user_from_request())
     )
     return jsonify({"success": 1, "criterias": _criterias_to_json(criterias)})
 
@@ -359,7 +359,7 @@ def add_votes(url, entry_url):
         return errors.not_found()
 
     JamEntryVote.delete().where(
-        JamEntryVote.entry == entry & JamEntryVote.voter == get_user_from_request()
+        (JamEntryVote.entry == entry) & (JamEntryVote.voter == get_user_from_request())
     ).execute()
 
     json = request.json
